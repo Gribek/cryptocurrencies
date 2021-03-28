@@ -10,6 +10,11 @@ class ApiDataDownloader:
         self.__timeout = timeout
         self.__data = None
 
+    @property
+    def data(self):
+        """Return the data collected from the API."""
+        return self.__data
+
     def get_data(self):
         """Send all requests to the API and gather data."""
         api_data = []
