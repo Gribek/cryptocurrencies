@@ -1,3 +1,4 @@
+from datetime import datetime, date
 import requests
 
 
@@ -43,3 +44,51 @@ class ApiDataDownloader:
             print('Request Error:', err)
         else:
             return response.json()
+
+
+class ApiDataContainer:
+    """Store data received from API."""
+
+    def __init__(self, api_data):
+        self._data = api_data
+
+
+class ApiDataModifier(ApiDataContainer):
+    """Modify data received from API."""
+
+    def __init__(self, data, modifications):
+        super(ApiDataModifier, self).__init__(data)
+        self.__modifications = modifications
+
+    class _Decorators:
+        """Decorators for ApiDataModifier methods."""
+
+        @classmethod
+        def add_new_key(cls, func):
+            """Add new key-value pair to the dictionary"""
+
+            def wrapper(self, dict_obj, dict_key, new_key, *args):
+                value = func(self, dict_obj, dict_key, *args)
+                if value is None:
+                    return False
+                dict_obj[new_key] = value
+                return True
+
+            return wrapper
+
+    def make_modifications(self):
+        """Perform the required data modifications."""
+        for data_dict in self._data:
+            for modification in self.__modifications:
+                method = getattr(self, modification['function'])
+                method(data_dict, *modification['args'])
+
+    @_Decorators.add_new_key
+    def format_date(self, dict_obj, key, in_format, out_format):
+        """Return the date in the specified format."""
+        date_string = dict_obj.get(key)
+        try:
+            d = datetime.strptime(date_string, in_format)
+        except (ValueError, TypeError):
+            return None
+        return datetime.strftime(d, out_format)
