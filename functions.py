@@ -60,6 +60,23 @@ class ApiDataModifier(ApiDataContainer):
         super(ApiDataModifier, self).__init__(data)
         self.__modifications = modifications
 
+    class _Decorators:
+        """Decorators for ApiDataModifier methods."""
+
+        @classmethod
+        def add_new_key(cls, func):
+            """Add new key-value pair to the dictionary"""
+
+            def wrapper(self, dict_obj, dict_key, new_key, *args):
+                value = func(self, dict_obj, dict_key, *args)
+                if value is None:
+                    return False
+                dict_obj[new_key] = value
+                return True
+
+            return wrapper
+
+    @_Decorators.add_new_key
     def format_date(self, dict_obj, key, in_format, out_format):
         """Return the date in the specified format."""
         date_string = dict_obj.get(key)
