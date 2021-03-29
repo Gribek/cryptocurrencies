@@ -123,7 +123,7 @@ class ApiDataSave(ApiDataContainer):
             return cls.create(**dataset)
 
     def __get_columns(self):
-        """Get list of fields for the selected table.
+        """Get a list of columns for the selected table.
 
         Exclude id and any foreign key fields.
         """
