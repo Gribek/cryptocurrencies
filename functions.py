@@ -50,3 +50,11 @@ class ApiDataContainer:
 
     def __init__(self, api_data):
         self._data = api_data
+
+
+class ApiDataModifier(ApiDataContainer):
+    """Modify data received from API."""
+
+    def __init__(self, data, modifications):
+        super(ApiDataModifier, self).__init__(data)
+        self.__modifications = modifications
