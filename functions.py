@@ -1,3 +1,4 @@
+from datetime import datetime, date
 import requests
 
 
@@ -58,3 +59,12 @@ class ApiDataModifier(ApiDataContainer):
     def __init__(self, data, modifications):
         super(ApiDataModifier, self).__init__(data)
         self.__modifications = modifications
+
+    def format_date(self, dict_obj, key, in_format, out_format):
+        """Return the date in the specified format."""
+        date_string = dict_obj.get(key)
+        try:
+            d = datetime.strptime(date_string, in_format)
+        except (ValueError, TypeError):
+            return None
+        return datetime.strftime(d, out_format)
