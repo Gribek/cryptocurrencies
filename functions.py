@@ -76,6 +76,13 @@ class ApiDataModifier(ApiDataContainer):
 
             return wrapper
 
+    def make_modifications(self):
+        """Perform the required data modifications."""
+        for data_dict in self._data:
+            for modification in self.__modifications:
+                method = getattr(self, modification['function'])
+                method(data_dict, *modification['args'])
+
     @_Decorators.add_new_key
     def format_date(self, dict_obj, key, in_format, out_format):
         """Return the date in the specified format."""
