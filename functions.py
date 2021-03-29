@@ -108,10 +108,7 @@ class ApiDataSave(ApiDataContainer):
     def save_data(self):
         """Save all data to the database."""
         saved_objects = []
-        with self.__db:
-            fk = [i.column for i in self.__db.get_foreign_keys(self.__table)]
-            columns = [c.name for c in self.__db.get_columns(self.__table) if
-                       c.name != 'id' and c.name not in fk]
+        columns = self.__get_columns()
         for data_dict in self._data:
             obj = self.__save_object(data_dict, columns)
             saved_objects.append(obj)
@@ -124,3 +121,14 @@ class ApiDataSave(ApiDataContainer):
         cls = getattr(import_module(self.__models_file), self.__table)
         with self.__db:
             return cls.create(**dataset)
+
+    def __get_columns(self):
+        """Get list of fields for the selected table.
+
+        Exclude id and any foreign key fields.
+        """
+        with self.__db:
+            fk = [i.column for i in self.__db.get_foreign_keys(self.__table)]
+            columns = [c.name for c in self.__db.get_columns(self.__table) if
+                       c.name != 'id' and c.name not in fk]
+        return columns
