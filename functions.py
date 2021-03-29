@@ -43,3 +43,10 @@ class ApiDataDownloader:
             print('Request Error:', err)
         else:
             return response.json()
+
+
+class ApiDataContainer:
+    """Store data received from API."""
+
+    def __init__(self, api_data):
+        self._data = api_data
