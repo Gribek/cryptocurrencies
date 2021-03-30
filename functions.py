@@ -132,3 +132,15 @@ class ApiDataSave(ApiDataContainer):
             columns = [c.name for c in self.__db.get_columns(self.__table) if
                        c.name != 'id' and c.name not in fk]
         return columns
+
+
+class ApiWorker:
+    """Download, modify and save the required API data."""
+
+    def __init__(self, db, url, param, modifications, table, foreign_keys):
+        self.__db = db
+        self.__url = url
+        self.__parameters = param
+        self.__modifications = modifications
+        self.__table = table
+        self.__foreign_keys = foreign_keys
