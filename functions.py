@@ -144,3 +144,14 @@ class ApiWorker:
         self.__modifications = modifications
         self.__table = table
         self.__foreign_keys = foreign_keys
+
+    def data_one_to_many(self):
+        downloader = ApiDataDownloader(self.__url, self.__parameters)
+        downloader.get_data()
+
+        modifier = ApiDataModifier(downloader.data, self.__modifications)
+        modifier.make_modifications()
+
+        save_obj = ApiDataSave(downloader.data, self.__db, self.__table,
+                               self.__foreign_keys)
+        return save_obj.save_data()
