@@ -137,21 +137,31 @@ class ApiDataSave(ApiDataContainer):
 class ApiWorker:
     """Download, modify and save the required API data."""
 
-    def __init__(self, db, url, param, modifications, table, foreign_keys):
+    def __init__(self, db, url, parameters, modifications, table,
+                 foreign_keys, selection=None, reject_values=None):
         self.__db = db
         self.__url = url
-        self.__parameters = param
+        self.__parameters = parameters
         self.__modifications = modifications
         self.__table = table
         self.__foreign_keys = foreign_keys
+        self.__selection = selection
+        self.__reject_values = reject_values
 
     def data_one_to_many(self):
         downloader = ApiDataDownloader(self.__url, self.__parameters)
         downloader.get_data()
 
         modifier = ApiDataModifier(downloader.data, self.__modifications)
+        if self.__selection:
+            self.__select_data(data=downloader.data)
         modifier.make_modifications()
 
         save_obj = ApiDataSave(downloader.data, self.__db, self.__table,
                                self.__foreign_keys)
         return save_obj.save_data()
+
+    def __select_data(self, data):
+        data_ = [data_dict for data_dict in data if
+                 data_dict[self.__selection] not in self.__reject_values]
+        # TODO: update data in downloader, use setter in Downloader class
