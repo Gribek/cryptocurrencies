@@ -1,4 +1,5 @@
 from datetime import datetime, date
+from importlib import import_module
 import requests
 
 
@@ -92,3 +93,42 @@ class ApiDataModifier(ApiDataContainer):
         except (ValueError, TypeError):
             return None
         return datetime.strftime(d, out_format)
+
+
+class ApiDataSave(ApiDataContainer):
+    """Save API data to the database."""
+
+    def __init__(self, api_data, db, table, foreign_keys, models='models'):
+        super(ApiDataSave, self).__init__(api_data)
+        self.__db = db
+        self.__table = table
+        self.__foreign_keys = foreign_keys
+        self.__models_file = models
+
+    def save_data(self):
+        """Save all data to the database."""
+        saved_objects = []
+        columns = self.__get_columns()
+        for data_dict in self._data:
+            obj = self.__save_object(data_dict, columns)
+            saved_objects.append(obj)
+        return saved_objects
+
+    def __save_object(self, data_dict, columns):
+        """Create and save a new object to the database."""
+        dataset = {column: data_dict[column] for column in columns}
+        dataset.update(self.__foreign_keys)
+        cls = getattr(import_module(self.__models_file), self.__table)
+        with self.__db:
+            return cls.create(**dataset)
+
+    def __get_columns(self):
+        """Get a list of columns for the selected table.
+
+        Exclude id and any foreign key fields.
+        """
+        with self.__db:
+            fk = [i.column for i in self.__db.get_foreign_keys(self.__table)]
+            columns = [c.name for c in self.__db.get_columns(self.__table) if
+                       c.name != 'id' and c.name not in fk]
+        return columns
