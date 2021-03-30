@@ -12,6 +12,16 @@ class BaseModel(Model):
     class Meta:
         database = db
 
+    @classmethod
+    def get_data_in_range(cls, column, lower, upper, condition=None):
+        """Return data within the given range."""
+        attr = getattr(cls, column)
+        if condition:
+            cond_attr = getattr(cls, condition['column'])
+            return cls.select().where((cond_attr == condition['value']) &
+                                      (attr.between(lower, upper)))
+        return cls.select().where(attr.between(lower, upper))
+
 
 class Cryptocurrency(BaseModel):
     """Represent a single cryptocurrency."""
