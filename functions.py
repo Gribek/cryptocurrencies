@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from importlib import import_module
 import requests
 
@@ -172,3 +172,13 @@ class ApiWorker:
         """Select data to be saved in the database."""
         return [data_dict for data_dict in data if
                 data_dict[self.__selection] not in self.__reject_values]
+
+
+class DataCollector:
+
+    def __init__(self, db):
+        self._db = db
+
+    @staticmethod
+    def list_values(db_data, column):
+        return [getattr(object_, column) for object_ in db_data]
