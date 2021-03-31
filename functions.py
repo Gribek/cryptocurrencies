@@ -158,15 +158,15 @@ class ApiWorker:
         downloader.get_data()
 
         modifier = ApiDataModifier(downloader.data, self.__modifications)
-        if self.__selection:
-            self.__select_data(data=downloader.data)
         modifier.make_modifications()
+        if self.__selection:
+            data = self.__select_data(data=downloader.data)
+            downloader.data = data
 
         save_obj = ApiDataSave(downloader.data, self.__db, self.__table,
                                self.__foreign_keys)
         return save_obj.save_data()
 
     def __select_data(self, data):
-        data_ = [data_dict for data_dict in data if
-                 data_dict[self.__selection] not in self.__reject_values]
-        # TODO: update data in downloader, use setter in Downloader class
+        return [data_dict for data_dict in data if
+                data_dict[self.__selection] not in self.__reject_values]
