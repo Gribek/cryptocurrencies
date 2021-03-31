@@ -2,6 +2,9 @@ from datetime import datetime, date, timedelta
 from importlib import import_module
 import requests
 
+from models import Cryptocurrency, HistoricalValue
+from settings import HISTORICAL_DATA, HISTORICAL_MODIFICATIONS, ROWS_LIMIT
+
 
 class ApiDataContainer:
     """Store data received from API."""
@@ -182,3 +185,64 @@ class DataCollector:
     @staticmethod
     def list_values(db_data, column):
         return [getattr(object_, column) for object_ in db_data]
+
+
+class HistoricalData(DataCollector):
+    __table = 'HistoricalValue'
+    __column = 'date'
+    __api_url = HISTORICAL_DATA
+    __modifications = HISTORICAL_MODIFICATIONS
+
+    def __init__(self, db, currency, start_date, end_date):
+        super(HistoricalData, self).__init__(db)
+        self.__currency = currency
+        self.__start_date = start_date
+        self.__end_date = end_date
+
+    def get_data(self):
+        with self._db:
+            c = Cryptocurrency.get_or_create(currency_name=self.__currency)[0]
+            db_data = HistoricalValue.get_data_in_range(
+                self.__column, self.__start_date, self.__end_date,
+                condition={'column': 'currency', 'value': c})
+
+        entries_required = self.count_days()
+        if len(db_data) == entries_required:
+            return db_data
+
+        parameters = self.get_parameters(entries_required)
+        reject_values = [datetime.strftime(day, '%Y-%m-%d') for day in
+                         self.list_values(db_data, self.__column)]
+        url = self.__api_url.safe_substitute(coin=self.__currency)
+
+        worker = ApiWorker(
+            self._db, url, parameters, self.__modifications, self.__table,
+            {'currency': c}, self.__column, reject_values
+        )
+        new_data = worker.data_one_to_many()
+        return list(db_data) + new_data
+
+    @staticmethod
+    def date_(value, format_='%Y-%m-%d'):
+        return datetime.strptime(value, format_)
+
+    def count_days(self):
+        delta = self.date_(self.__end_date) - self.date_(self.__start_date)
+        return delta.days + 1
+
+    def date_range(self, days):
+        dates = []
+        start = self.date_(self.__start_date)
+        for i in range(days):
+            d = datetime.strftime(start + timedelta(days=i), '%Y-%m-%d')
+            dates.append(d)
+        return dates
+
+    def get_parameters(self, entries_required):
+        if entries_required < ROWS_LIMIT:
+            return {'start': self.__start_date, 'end': self.__end_date},
+
+        date_range = self.date_range(entries_required)
+        split_dates = [date_range[i * ROWS_LIMIT:(i + 1) * ROWS_LIMIT] for i in
+                       range((len(date_range) + ROWS_LIMIT - 1) // ROWS_LIMIT)]
+        return ({'start': i[0], 'end': i[-1]} for i in split_dates)
