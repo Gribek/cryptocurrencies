@@ -3,19 +3,26 @@ from importlib import import_module
 import requests
 
 
-class ApiDataDownloader:
+class ApiDataContainer:
+    """Store data received from API."""
+
+    def __init__(self, api_data=None):
+        self._data = api_data
+
+
+class ApiDataDownloader(ApiDataContainer):
     """Download data from API."""
 
     def __init__(self, url, parameters, timeout=5):
+        super(ApiDataDownloader, self).__init__()
         self.__api_url = url
         self.__parameters = parameters
         self.__timeout = timeout
-        self.__data = None
 
     @property
     def data(self):
         """Return the data collected from the API."""
-        return self.__data
+        return self._data
 
     def get_data(self):
         """Send all requests to the API and gather data."""
@@ -27,7 +34,7 @@ class ApiDataDownloader:
                     break
                 api_data += data
             else:
-                self.__data = api_data
+                self._data = api_data
 
     def send_request(self, session, params):
         """Send a request using the given session and parameters."""
@@ -45,13 +52,6 @@ class ApiDataDownloader:
             print('Request Error:', err)
         else:
             return response.json()
-
-
-class ApiDataContainer:
-    """Store data received from API."""
-
-    def __init__(self, api_data):
-        self._data = api_data
 
 
 class ApiDataModifier(ApiDataContainer):
