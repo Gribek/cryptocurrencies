@@ -154,6 +154,7 @@ class ApiWorker:
         self.__reject_values = reject_values
 
     def data_one_to_many(self):
+        """Prepare and save data with one to many relationship."""
         downloader = ApiDataDownloader(self.__url, self.__parameters)
         downloader.get_data()
 
@@ -168,5 +169,6 @@ class ApiWorker:
         return save_obj.save_data()
 
     def __select_data(self, data):
+        """Select data to be saved in the database."""
         return [data_dict for data_dict in data if
                 data_dict[self.__selection] not in self.__reject_values]
