@@ -3,19 +3,31 @@ from importlib import import_module
 import requests
 
 
-class ApiDataDownloader:
-    """Download data from API."""
+class ApiDataContainer:
+    """Store data received from API."""
 
-    def __init__(self, url, parameters, timeout=5):
-        self.__api_url = url
-        self.__parameters = parameters
-        self.__timeout = timeout
-        self.__data = None
+    def __init__(self, api_data=None):
+        self._data = api_data
 
     @property
     def data(self):
-        """Return the data collected from the API."""
-        return self.__data
+        """Return the stored API data."""
+        return self._data
+
+    @data.setter
+    def data(self, new_data):
+        """Replace the stored data with the new ones."""
+        self._data = new_data
+
+
+class ApiDataDownloader(ApiDataContainer):
+    """Download data from API."""
+
+    def __init__(self, url, parameters, timeout=5):
+        super(ApiDataDownloader, self).__init__()
+        self.__api_url = url
+        self.__parameters = parameters
+        self.__timeout = timeout
 
     def get_data(self):
         """Send all requests to the API and gather data."""
@@ -27,7 +39,7 @@ class ApiDataDownloader:
                     break
                 api_data += data
             else:
-                self.__data = api_data
+                self._data = api_data
 
     def send_request(self, session, params):
         """Send a request using the given session and parameters."""
@@ -45,13 +57,6 @@ class ApiDataDownloader:
             print('Request Error:', err)
         else:
             return response.json()
-
-
-class ApiDataContainer:
-    """Store data received from API."""
-
-    def __init__(self, api_data):
-        self._data = api_data
 
 
 class ApiDataModifier(ApiDataContainer):
@@ -132,3 +137,38 @@ class ApiDataSave(ApiDataContainer):
             columns = [c.name for c in self.__db.get_columns(self.__table) if
                        c.name != 'id' and c.name not in fk]
         return columns
+
+
+class ApiWorker:
+    """Download, modify and save the required API data."""
+
+    def __init__(self, db, url, parameters, modifications, table,
+                 foreign_keys, selection=None, reject_values=None):
+        self.__db = db
+        self.__url = url
+        self.__parameters = parameters
+        self.__modifications = modifications
+        self.__table = table
+        self.__foreign_keys = foreign_keys
+        self.__selection = selection
+        self.__reject_values = reject_values
+
+    def data_one_to_many(self):
+        """Prepare and save data with one to many relationship."""
+        downloader = ApiDataDownloader(self.__url, self.__parameters)
+        downloader.get_data()
+
+        modifier = ApiDataModifier(downloader.data, self.__modifications)
+        modifier.make_modifications()
+        if self.__selection:
+            data = self.__select_data(data=downloader.data)
+            downloader.data = data
+
+        save_obj = ApiDataSave(downloader.data, self.__db, self.__table,
+                               self.__foreign_keys)
+        return save_obj.save_data()
+
+    def __select_data(self, data):
+        """Select data to be saved in the database."""
+        return [data_dict for data_dict in data if
+                data_dict[self.__selection] not in self.__reject_values]
