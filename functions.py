@@ -9,6 +9,16 @@ class ApiDataContainer:
     def __init__(self, api_data=None):
         self._data = api_data
 
+    @property
+    def data(self):
+        """Return the stored API data."""
+        return self._data
+
+    @data.setter
+    def data(self, new_data):
+        """Replace the stored data with the new ones."""
+        self._data = new_data
+
 
 class ApiDataDownloader(ApiDataContainer):
     """Download data from API."""
@@ -18,11 +28,6 @@ class ApiDataDownloader(ApiDataContainer):
         self.__api_url = url
         self.__parameters = parameters
         self.__timeout = timeout
-
-    @property
-    def data(self):
-        """Return the data collected from the API."""
-        return self._data
 
     def get_data(self):
         """Send all requests to the API and gather data."""
