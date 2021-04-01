@@ -264,11 +264,11 @@ def to_string(value, format_='%Y-%m-%d'):
 def historical_collector(cli_function):
     """Gather required data and pass them to a CLI function."""
 
-    def wrapper(**kwargs):
+    def wrapper(ctx, **kwargs):
         db = sqlite_connection(settings.DB_PATH, settings.DB_FILENAME)
-        c = HistoricalCollector(
-            db, kwargs['currency'], kwargs['start_date'], kwargs['end_date'])
+        c = HistoricalCollector(db, ctx.obj['currency'], ctx.obj['start_date'],
+                                ctx.obj['end_date'])
 
-        cli_function(c.get_data(), **kwargs)
+        cli_function(ctx, c.get_data(), **kwargs)
 
     return wrapper
