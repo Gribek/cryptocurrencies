@@ -245,6 +245,7 @@ class HistoricalCollector:
 
 
 def list_values(container, attribute):
+    """List the values of the selected attribute for all objects."""
     return [getattr(object_, attribute) for object_ in container]
 
 
