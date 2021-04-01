@@ -177,17 +177,7 @@ class ApiWorker:
                 data_dict[self.__selection] not in self.__reject_values]
 
 
-class DataCollector:
-
-    def __init__(self, db):
-        self._db = db
-
-    @staticmethod
-    def list_values(db_data, column):
-        return [getattr(object_, column) for object_ in db_data]
-
-
-class HistoricalData(DataCollector):
+class HistoricalCollector:
     """Collect historical OHLC values."""
 
     __table = 'HistoricalValue'
@@ -196,14 +186,14 @@ class HistoricalData(DataCollector):
     __modifications = HISTORICAL_MODIFICATIONS
 
     def __init__(self, db, currency, start_date, end_date):
-        super(HistoricalData, self).__init__(db)
+        self.__db = db
         self.__currency = currency
         self.__start_date = start_date
         self.__end_date = end_date
 
     def get_data(self):
         """Gather the requested data from the db or the API."""
-        with self._db:
+        with self.__db:
             c = Cryptocurrency.get_or_create(currency_name=self.__currency)[0]
             db_data = HistoricalValue.get_data_in_range(
                 self.__column, self.__start_date, self.__end_date,
@@ -215,11 +205,11 @@ class HistoricalData(DataCollector):
 
         parameters = self.requests_parameters(entries_required, ROWS_LIMIT)
         reject_values = [datetime.strftime(day, '%Y-%m-%d') for day in
-                         self.list_values(db_data, self.__column)]
+                         list_values(db_data, self.__column)]
         url = self.__api_url.safe_substitute(coin=self.__currency)
 
         worker = ApiWorker(
-            self._db, url, parameters, self.__modifications, self.__table,
+            self.__db, url, parameters, self.__modifications, self.__table,
             {'currency': c}, self.__column, reject_values
         )
         new_data = worker.data_one_to_many()
@@ -252,3 +242,7 @@ class HistoricalData(DataCollector):
         split_dates = [date_range[i * limit:(i + 1) * limit] for i in
                        range((len(date_range) + limit - 1) // limit)]
         return ({'start': i[0], 'end': i[-1]} for i in split_dates)
+
+
+def list_values(container, attribute):
+    return [getattr(object_, attribute) for object_ in container]
