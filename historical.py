@@ -1,11 +1,13 @@
 import click
 
 from functions import historical_collector
+from validation import validate_start_date, validate_end_date
+
 
 
 @click.group()
-@click.option('--start-date', prompt=True)
-@click.option('--end-date', prompt=True)
+@click.option('--start-date', prompt=True, callback=validate_start_date)
+@click.option('--end-date', prompt=True, callback=validate_end_date)
 @click.option('--currency', default='btc-bitcoin')
 @click.option('--ohlc', default='close',
               type=click.Choice(['open', 'close', 'high', 'low']),
