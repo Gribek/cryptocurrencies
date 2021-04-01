@@ -1,6 +1,9 @@
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from importlib import import_module
 import requests
+
+from models import Cryptocurrency, HistoricalValue
+from settings import HISTORICAL_URL, HISTORICAL_MODIFICATIONS, ROWS_LIMIT
 
 
 class ApiDataContainer:
@@ -94,10 +97,10 @@ class ApiDataModifier(ApiDataContainer):
         """Return the date in the specified format."""
         date_string = dict_obj.get(key)
         try:
-            d = datetime.strptime(date_string, in_format)
+            d = to_datetime(date_string, in_format)
         except (ValueError, TypeError):
             return None
-        return datetime.strftime(d, out_format)
+        return to_string(d, out_format)
 
 
 class ApiDataSave(ApiDataContainer):
@@ -172,3 +175,85 @@ class ApiWorker:
         """Select data to be saved in the database."""
         return [data_dict for data_dict in data if
                 data_dict[self.__selection] not in self.__reject_values]
+
+
+class HistoricalCollector:
+    """Collect historical OHLC values."""
+
+    __table = 'HistoricalValue'
+    __column = 'date'
+    __api_url = HISTORICAL_URL
+    __modifications = HISTORICAL_MODIFICATIONS
+
+    def __init__(self, db, currency, start_date, end_date):
+        self.__db = db
+        self.__currency = currency
+        self.__start_date = start_date
+        self.__end_date = end_date
+
+    def get_data(self):
+        """Gather the requested data from the db or the API."""
+        with self.__db:
+            c = Cryptocurrency.get_or_create(currency_name=self.__currency)[0]
+            db_data = HistoricalValue.get_data_in_range(
+                self.__column, self.__start_date, self.__end_date,
+                condition={'column': 'currency', 'value': c})
+
+        entries_required = self.count_days()
+        if len(db_data) == entries_required:
+            return db_data
+
+        parameters = self.requests_parameters(entries_required, ROWS_LIMIT)
+        reject_values = [to_string(day) for day in
+                         list_values(db_data, self.__column)]
+        url = self.__api_url.safe_substitute(coin=self.__currency)
+
+        worker = ApiWorker(
+            self.__db, url, parameters, self.__modifications, self.__table,
+            {'currency': c}, self.__column, reject_values
+        )
+        new_data = worker.data_one_to_many()
+        return list(db_data) + new_data
+
+    @staticmethod
+    def date_(value, format_='%Y-%m-%d'):
+        return datetime.strptime(value, format_)
+
+    def count_days(self):
+        """Count days between start and end dates inclusively."""
+        delta = to_datetime(self.__end_date) - to_datetime(self.__start_date)
+        return delta.days + 1
+
+    def date_range(self, days):
+        """Get a list of dates for which data are needed."""
+        dates = []
+        start = to_datetime(self.__start_date)
+        for i in range(days):
+            day = to_string(start + timedelta(days=i))
+            dates.append(day)
+        return dates
+
+    def requests_parameters(self, entries_required, limit):
+        """Prepare query parameters for requests sent to the API."""
+        if entries_required < limit:
+            return {'start': self.__start_date, 'end': self.__end_date},
+
+        date_range = self.date_range(entries_required)
+        split_dates = [date_range[i * limit:(i + 1) * limit] for i in
+                       range((len(date_range) + limit - 1) // limit)]
+        return ({'start': i[0], 'end': i[-1]} for i in split_dates)
+
+
+def list_values(container, attribute):
+    """List the values of the selected attribute for all objects."""
+    return [getattr(object_, attribute) for object_ in container]
+
+
+def to_datetime(value, format_='%Y-%m-%d'):
+    """Convert datetime object to a string."""
+    return datetime.strptime(value, format_)
+
+
+def to_string(value, format_='%Y-%m-%d'):
+    """Convert string to a datetime object."""
+    return datetime.strftime(value, format_)
