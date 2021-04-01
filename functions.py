@@ -3,7 +3,7 @@ from importlib import import_module
 import requests
 
 from models import Cryptocurrency, HistoricalValue
-from settings import HISTORICAL_DATA, HISTORICAL_MODIFICATIONS, ROWS_LIMIT
+from settings import HISTORICAL_URL, HISTORICAL_MODIFICATIONS, ROWS_LIMIT
 
 
 class ApiDataContainer:
@@ -188,9 +188,11 @@ class DataCollector:
 
 
 class HistoricalData(DataCollector):
+    """Collect historical OHLC values."""
+
     __table = 'HistoricalValue'
     __column = 'date'
-    __api_url = HISTORICAL_DATA
+    __api_url = HISTORICAL_URL
     __modifications = HISTORICAL_MODIFICATIONS
 
     def __init__(self, db, currency, start_date, end_date):
@@ -200,6 +202,7 @@ class HistoricalData(DataCollector):
         self.__end_date = end_date
 
     def get_data(self):
+        """Gather the requested data from the db or the API."""
         with self._db:
             c = Cryptocurrency.get_or_create(currency_name=self.__currency)[0]
             db_data = HistoricalValue.get_data_in_range(
@@ -210,7 +213,7 @@ class HistoricalData(DataCollector):
         if len(db_data) == entries_required:
             return db_data
 
-        parameters = self.get_parameters(entries_required)
+        parameters = self.requests_parameters(entries_required, ROWS_LIMIT)
         reject_values = [datetime.strftime(day, '%Y-%m-%d') for day in
                          self.list_values(db_data, self.__column)]
         url = self.__api_url.safe_substitute(coin=self.__currency)
@@ -227,22 +230,25 @@ class HistoricalData(DataCollector):
         return datetime.strptime(value, format_)
 
     def count_days(self):
+        """Count days between start and end dates inclusively."""
         delta = self.date_(self.__end_date) - self.date_(self.__start_date)
         return delta.days + 1
 
     def date_range(self, days):
+        """Get a list of dates for which data are needed."""
         dates = []
         start = self.date_(self.__start_date)
         for i in range(days):
-            d = datetime.strftime(start + timedelta(days=i), '%Y-%m-%d')
-            dates.append(d)
+            day = datetime.strftime(start + timedelta(days=i), '%Y-%m-%d')
+            dates.append(day)
         return dates
 
-    def get_parameters(self, entries_required):
-        if entries_required < ROWS_LIMIT:
+    def requests_parameters(self, entries_required, limit):
+        """Prepare query parameters for requests sent to the API."""
+        if entries_required < limit:
             return {'start': self.__start_date, 'end': self.__end_date},
 
         date_range = self.date_range(entries_required)
-        split_dates = [date_range[i * ROWS_LIMIT:(i + 1) * ROWS_LIMIT] for i in
-                       range((len(date_range) + ROWS_LIMIT - 1) // ROWS_LIMIT)]
+        split_dates = [date_range[i * limit:(i + 1) * limit] for i in
+                       range((len(date_range) + limit - 1) // limit)]
         return ({'start': i[0], 'end': i[-1]} for i in split_dates)
