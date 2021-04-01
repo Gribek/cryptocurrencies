@@ -10,7 +10,7 @@ DB_PATH = 'db'
 
 # API
 # url for historical OHLC
-HISTORICAL_DATA = Template(
+HISTORICAL_URL = Template(
     'https://api.coinpaprika.com/v1/coins/$coin/ohlcv/historical')
 
 # Maximum number of rows in one request (due to API limit)
