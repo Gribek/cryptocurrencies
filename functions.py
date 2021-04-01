@@ -266,7 +266,7 @@ def historical_collector(cli_function):
 
     def wrapper(ctx, **kwargs):
         db = sqlite_connection(settings.DB_PATH, settings.DB_FILENAME)
-        c = HistoricalCollector(db, ctx.obj['currency'], ctx.obj['start_date'],
+        c = HistoricalCollector(db, ctx.obj['coin'], ctx.obj['start_date'],
                                 ctx.obj['end_date'])
 
         cli_function(ctx, c.get_data(), **kwargs)

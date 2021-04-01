@@ -25,7 +25,7 @@ def consecutive_increase(ctx, data):
     for i in data:
         click.echo(getattr(i, ctx.obj['ohlc']))
     click.echo('consecutive-increase')
-    click.echo(ctx.obj['currency'])
+    click.echo(ctx.obj['coin'])
     click.echo(ctx.obj['ohlc'])
 
 
