@@ -262,7 +262,7 @@ def to_string(value, format_='%Y-%m-%d'):
 
 
 def historical_collector(cli_function):
-    """Pass data gathered by HistoricalCollector to a CLI function."""
+    """Gather required data and pass them to a CLI function."""
 
     def wrapper(**kwargs):
         db = sqlite_connection(settings.DB_PATH, settings.DB_FILENAME)
