@@ -97,10 +97,10 @@ class ApiDataModifier(ApiDataContainer):
         """Return the date in the specified format."""
         date_string = dict_obj.get(key)
         try:
-            d = datetime.strptime(date_string, in_format)
+            d = to_datetime(date_string, in_format)
         except (ValueError, TypeError):
             return None
-        return datetime.strftime(d, out_format)
+        return to_string(d, out_format)
 
 
 class ApiDataSave(ApiDataContainer):
@@ -204,7 +204,7 @@ class HistoricalCollector:
             return db_data
 
         parameters = self.requests_parameters(entries_required, ROWS_LIMIT)
-        reject_values = [datetime.strftime(day, '%Y-%m-%d') for day in
+        reject_values = [to_string(day) for day in
                          list_values(db_data, self.__column)]
         url = self.__api_url.safe_substitute(coin=self.__currency)
 
@@ -221,15 +221,15 @@ class HistoricalCollector:
 
     def count_days(self):
         """Count days between start and end dates inclusively."""
-        delta = self.date_(self.__end_date) - self.date_(self.__start_date)
+        delta = to_datetime(self.__end_date) - to_datetime(self.__start_date)
         return delta.days + 1
 
     def date_range(self, days):
         """Get a list of dates for which data are needed."""
         dates = []
-        start = self.date_(self.__start_date)
+        start = to_datetime(self.__start_date)
         for i in range(days):
-            day = datetime.strftime(start + timedelta(days=i), '%Y-%m-%d')
+            day = to_string(start + timedelta(days=i))
             dates.append(day)
         return dates
 
@@ -246,3 +246,13 @@ class HistoricalCollector:
 
 def list_values(container, attribute):
     return [getattr(object_, attribute) for object_ in container]
+
+
+def to_datetime(value, format_='%Y-%m-%d'):
+    """Convert datetime object to a string."""
+    return datetime.strptime(value, format_)
+
+
+def to_string(value, format_='%Y-%m-%d'):
+    """Convert string to a datetime object."""
+    return datetime.strftime(value, format_)
