@@ -3,7 +3,9 @@ from importlib import import_module
 import requests
 
 from models import Cryptocurrency, HistoricalValue
+from db_connection import sqlite_connection
 from settings import HISTORICAL_URL, HISTORICAL_MODIFICATIONS, ROWS_LIMIT
+import settings
 
 
 class ApiDataContainer:
@@ -257,3 +259,16 @@ def to_datetime(value, format_='%Y-%m-%d'):
 def to_string(value, format_='%Y-%m-%d'):
     """Convert string to a datetime object."""
     return datetime.strftime(value, format_)
+
+
+def historical_collector(cli_function):
+    """Gather required data and pass them to a CLI function."""
+
+    def wrapper(ctx, **kwargs):
+        db = sqlite_connection(settings.DB_PATH, settings.DB_FILENAME)
+        c = HistoricalCollector(db, ctx.obj['coin'], ctx.obj['start_date'],
+                                ctx.obj['end_date'])
+
+        cli_function(ctx, c.get_data(), **kwargs)
+
+    return wrapper
