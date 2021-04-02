@@ -219,22 +219,23 @@ class HistoricalCollector:
 
     def count_days(self):
         """Count days between start and end dates inclusively."""
-        delta = to_datetime(self.__end_date) - to_datetime(self.__start_date)
+        delta = self.__end_date - self.__start_date
         return delta.days + 1
 
     def date_range(self, days):
         """Get a list of dates for which data are needed."""
         dates = []
-        start = to_datetime(self.__start_date)
+        start = self.__start_date
         for i in range(days):
-            day = to_string(start + timedelta(days=i))
-            dates.append(day)
+            day = start + timedelta(days=i)
+            dates.append(to_string(day))
         return dates
 
     def requests_parameters(self, entries_required, limit):
         """Prepare query parameters for requests sent to the API."""
         if entries_required < limit:
-            return {'start': self.__start_date, 'end': self.__end_date},
+            return {'start': to_string(self.__start_date),
+                    'end': to_string(self.__end_date)},
 
         date_range = self.date_range(entries_required)
         split_dates = [date_range[i * limit:(i + 1) * limit] for i in
