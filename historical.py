@@ -29,5 +29,14 @@ def consecutive_increase(ctx, data):
     click.echo(ctx.obj['ohlc'])
 
 
+@cli.command('average-price-by-month')
+@click.pass_context
+@historical_collector
+def month_average_price(ctx, data):
+    click.echo(data)
+    for i in data:
+        click.echo(getattr(i, 'date'))
+
+
 if __name__ == '__main__':
     cli(obj={})
