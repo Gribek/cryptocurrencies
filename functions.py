@@ -217,10 +217,6 @@ class HistoricalCollector:
         new_data = worker.data_one_to_many()
         return list(db_data) + new_data
 
-    @staticmethod
-    def date_(value, format_='%Y-%m-%d'):
-        return datetime.strptime(value, format_)
-
     def count_days(self):
         """Count days between start and end dates inclusively."""
         delta = to_datetime(self.__end_date) - to_datetime(self.__start_date)
