@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
 from importlib import import_module
 import requests
+from string import Template
+import sys
 
 from models import Cryptocurrency, HistoricalValue
 from db_connection import sqlite_connection
@@ -168,6 +170,9 @@ class ApiWorker:
         """Prepare and save data with one to many relationship."""
         downloader = ApiDataDownloader(self.__url, self.__parameters)
         downloader.get_data()
+        if downloader.data is None:
+            error = downloader.error
+            return None, error
 
         modifier = ApiDataModifier(downloader.data, self.__modifications)
         modifier.make_modifications()
@@ -177,7 +182,7 @@ class ApiWorker:
 
         save_obj = ApiDataSave(downloader.data, self.__db, self.__table,
                                self.__foreign_keys)
-        return save_obj.save_data()
+        return save_obj.save_data(), None
 
     def __select_data(self, data):
         """Select data to be saved in the database."""
@@ -209,7 +214,7 @@ class HistoricalCollector:
 
         entries_required = self.count_days()
         if len(db_data) == entries_required:
-            return db_data
+            return db_data, None
 
         parameters = self.requests_parameters(entries_required, ROWS_LIMIT)
         reject_values = [to_string(day) for day in
@@ -220,8 +225,11 @@ class HistoricalCollector:
             self.__db, url, parameters, self.__modifications, self.__table,
             {'currency': c}, self.__column, reject_values
         )
-        new_data = worker.data_one_to_many()
-        return list(db_data) + new_data
+        new_data, error = worker.data_one_to_many()
+        if new_data is None:
+            return None, error
+
+        return list(db_data) + new_data, error
 
     def count_days(self):
         """Count days between start and end dates inclusively."""
@@ -267,11 +275,25 @@ def to_string(value, format_='%Y-%m-%d'):
 def historical_collector(cli_function):
     """Gather required data and pass them to a CLI function."""
 
+    error_message = Template(
+        "No data was found for the following query:\n Start date: $start\n "
+        "End date: $end\n Coin: $coin\n\n "
+        "Make sure you have entered the correct cryptocurrency ID\n\n "
+        "The following error has occurred:\n $error"
+    )
+
     def wrapper(ctx, **kwargs):
         db = sqlite_connection(settings.DB_PATH, settings.DB_FILENAME)
         c = HistoricalCollector(db, ctx.obj['coin'], ctx.obj['start_date'],
                                 ctx.obj['end_date'])
+        data, error = c.get_data()
 
-        cli_function(ctx, c.get_data(), **kwargs)
+        if error is not None:
+            sys.exit(error_message.safe_substitute(
+                {'start': to_string(ctx.obj['start_date']),
+                 'end': to_string(ctx.obj['end_date']),
+                 'coin': ctx.obj['coin'], 'error': error}))
+
+        cli_function(ctx, data, **kwargs)
 
     return wrapper
