@@ -38,5 +38,19 @@ def month_average_price(ctx, data):
         click.echo(getattr(i, 'date'))
 
 
+@cli.command('export')
+@click.pass_context
+@click.option('--format', default='csv', type=click.Choice(['csv', 'json']),
+              help='Choose file format, default is "csv"')
+@click.option('--file', default='data', help='Choose name of the file')
+@historical_collector
+def export(ctx, data, **kwargs):
+    click.echo(data)
+    click.echo(kwargs['format'])
+    click.echo(kwargs['file'])
+    for i in data:
+        click.echo(getattr(i, 'date'))
+
+
 if __name__ == '__main__':
     cli(obj={})
