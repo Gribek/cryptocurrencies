@@ -258,6 +258,7 @@ class HistoricalCollector:
 
 
 class HistoricalFunctions:
+    """Perform calculations or actions as required by cli commands."""
 
     def __init__(self, historical_data, price_column):
         self.__historical_data = historical_data
