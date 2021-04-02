@@ -33,6 +33,12 @@ class ApiDataDownloader(ApiDataContainer):
         self.__api_url = url
         self.__parameters = parameters
         self.__timeout = timeout
+        self.__error = None
+
+    @property
+    def error(self):
+        """Return the error."""
+        return self.__error
 
     def get_data(self):
         """Send all requests to the API and gather data."""
@@ -53,13 +59,13 @@ class ApiDataDownloader(ApiDataContainer):
                                    timeout=self.__timeout)
             response.raise_for_status()
         except requests.exceptions.HTTPError as err:
-            print('HTTP Error:', err)
+            self.__error = f'HTTP Error: {err}'
         except requests.exceptions.Timeout as err:
-            print('Timeout Error:', err)
+            self.__error = f'Timeout Error: {err}'
         except requests.exceptions.ConnectionError as err:
-            print('Connection Error:', err)
+            self.__error = f'Connection Error: {err}'
         except requests.exceptions.RequestException as err:
-            print('Request Error:', err)
+            self.__error = f'Request Error: {err}'
         else:
             return response.json()
 
