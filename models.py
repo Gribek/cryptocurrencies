@@ -38,6 +38,11 @@ class HistoricalValue(BaseModel):
     currency = ForeignKeyField(Cryptocurrency, backref='historical_values',
                                on_delete='CASCADE')
 
+    def to_json(self, price_column, precision=2):
+        price = getattr(self, price_column)
+        return {'date': str(self.date),
+                'price': round(float(price), precision)}
+
 
 # Initialize database and create tables
 if __name__ == '__main__':
