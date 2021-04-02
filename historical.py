@@ -7,7 +7,9 @@ from validation import validate_start_date, validate_end_date
 @click.group()
 @click.option('--start-date', prompt=True, callback=validate_start_date)
 @click.option('--end-date', prompt=True, callback=validate_end_date)
-@click.option('--coin', default='btc-bitcoin')
+@click.option('--coin', default='btc-bitcoin',
+              help='Specify the name of the cryptocurrency, '
+                   'default is "btc-bitcoin"')
 @click.option('--ohlc', default='close',
               type=click.Choice(['open', 'close', 'high', 'low']),
               help='Choose one of the OHLC values, default is "close"')
@@ -42,7 +44,8 @@ def month_average_price(ctx, data):
 @click.pass_context
 @click.option('--format', default='csv', type=click.Choice(['csv', 'json']),
               help='Choose file format, default is "csv"')
-@click.option('--file', default='data', help='Choose name of the file')
+@click.option('--file', default='data',
+              help='Choose name of the file, default is "historical_data"')
 @historical_collector
 def export(ctx, data, **kwargs):
     click.echo(data)
