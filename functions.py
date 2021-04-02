@@ -257,6 +257,68 @@ class HistoricalCollector:
         return ({'start': i[0], 'end': i[-1]} for i in split_dates)
 
 
+class HistoricalFunctions:
+
+    def __init__(self, historical_data, price_column):
+        self.__historical_data = historical_data
+        self.__price_column = price_column
+
+    def longest_growth_period(self):
+        """Find longest consecutive periods with increasing price."""
+
+        local_max, local_min = self.find_local_max_min(self.__historical_data,
+                                                       self.__price_column)
+        # Discard first element (local maximum)
+        if len(local_max) > len(local_min):
+            local_max.pop(0)
+        # Discard last element (local minimum)
+        elif len(local_max) < len(local_min):
+            local_min.pop(-1)
+        else:
+            # Discard first and last elem if local max and min accordingly
+            if local_max[0] == 0:
+                local_max.pop(0)
+                local_min.pop(-1)
+
+        pairs = list(zip(local_min, local_max))
+        m = max(pairs, key=self.difference)
+        return (p for p in pairs if self.difference(p) == self.difference(m))
+
+    @staticmethod
+    def find_local_max_min(data, column):
+        """Find local maximum and local minimum values."""
+        local_max = []
+        local_min = []
+        n = len(data)
+        data = list_values(data, column)
+
+        # First element on list
+        if data[0] > data[1]:
+            local_max.append(0)
+        elif data[0] < data[1]:
+            local_min.append(0)
+
+        # Iterate through middle of tle list
+        for i in range(1, n - 1):
+            if data[i - 1] > data[i] < data[i + 1]:
+                local_min.append(i)
+            elif data[i - 1] < data[i] > data[i + 1]:
+                local_max.append(i)
+
+        # Last element on list
+        if data[-1] > data[-2]:
+            local_max.append(n - 1)
+        elif data[-1] < data[-2]:
+            local_min.append(n - 1)
+
+        return local_max, local_min
+
+    @staticmethod
+    def difference(pair):
+        """Calculate absolute difference between two elements."""
+        return abs(pair[0] - pair[1])
+
+
 def list_values(container, attribute):
     """List the values of the selected attribute for all objects."""
     return [getattr(object_, attribute) for object_ in container]
