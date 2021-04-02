@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from importlib import import_module
 import requests
+from statistics import mean
 from string import Template
 import sys
 
@@ -318,6 +319,32 @@ class HistoricalFunctions:
     def difference(pair):
         """Calculate absolute difference between two elements."""
         return abs(pair[0] - pair[1])
+
+    def average_price(self, precision=2):
+        """Calculate the average price for each month."""
+        grouped_by_months = self.group_by_months()
+        result = []
+        for data in grouped_by_months:
+            prices = list_values(data, self.__price_column)
+            average = mean(prices)
+            date = to_string(data[0].date, '%Y-%m')
+            result.append((date, round(average, precision)))
+        return result
+
+    def group_by_months(self):
+        """Group historical data by month."""
+        result = []
+        month = self.__historical_data[0].date.month
+        start_index = 0
+        for index, record in enumerate(self.__historical_data):
+            if record.date.month == month:
+                continue
+            result.append(self.__historical_data[start_index:index])
+            start_index = index
+            month = record.date.month
+        else:
+            result.append(self.__historical_data[start_index:])
+        return result
 
 
 def list_values(container, attribute):
