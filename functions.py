@@ -349,10 +349,11 @@ class HistoricalFunctions:
 
     def export_fo_file(self, name, format_):
         """Export historical data to the file in the given format."""
-        methods = {'csv': '_save_as_csv', 'json': '_save_as_json'}
-        func = getattr(self, methods.get(format_))
-        if func is None:
+        export_methods = {'csv': '_save_as_csv', 'json': '_save_as_json'}
+        method = export_methods.get(format_)
+        if method is None:
             sys.exit(f'Unable to save to {format_} file. Unknown format.')
+        func = getattr(self, method)
         filename = name + '.' + format_
         data = [i.to_file(self.__price_column) for i in self.__historical_data]
         func(data, filename)
