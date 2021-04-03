@@ -212,9 +212,7 @@ class HistoricalCollector:
         """Gather the requested data from the db or the API."""
         with self.__db:
             c = Cryptocurrency.get_or_create(currency_name=self.__currency)[0]
-            db_data = HistoricalValue.get_data_in_range(
-                self.__column, self.__start_date, self.__end_date,
-                condition={'column': 'currency', 'value': c})
+            db_data = self.get_historical_values(c)
 
         entries_required = self.count_days()
         if len(db_data) == entries_required:
@@ -233,7 +231,17 @@ class HistoricalCollector:
         if new_data is None:
             return None, error
 
-        return list(db_data) + new_data, error
+        with self.__db:
+            complete_data = self.get_historical_values(c)
+
+        return complete_data, error
+
+    def get_historical_values(self, cryptocurrency):
+        """Download historical values from the database."""
+        db_data = HistoricalValue.get_data_in_range(
+            self.__column, self.__start_date, self.__end_date,
+            condition={'column': 'currency', 'value': cryptocurrency})
+        return db_data
 
     def count_days(self):
         """Count days between start and end dates inclusively."""
