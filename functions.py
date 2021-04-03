@@ -268,12 +268,12 @@ class HistoricalFunctions:
     def longest_growth_period(self):
         """Find longest consecutive periods with increasing price."""
 
-        local_max, local_min = self.find_local_max_min(self.__historical_data,
-                                                       self.__price_column)
-        # Discard first element (local maximum)
+        prices = list_values(self.__historical_data, self.__price_column)
+        local_max, local_min = self.find_local_max_min(prices)
+        # Discard first element if local maximum
         if len(local_max) > len(local_min):
             local_max.pop(0)
-        # Discard last element (local minimum)
+        # Discard last element if local minimum
         elif len(local_max) < len(local_min):
             local_min.pop(-1)
         else:
@@ -287,12 +287,11 @@ class HistoricalFunctions:
         return (p for p in pairs if self.difference(p) == self.difference(m))
 
     @staticmethod
-    def find_local_max_min(data, column):
+    def find_local_max_min(data):
         """Find local maximum and local minimum values."""
         local_max = []
         local_min = []
         n = len(data)
-        data = list_values(data, column)
 
         # First element on list
         if data[0] > data[1]:
