@@ -49,9 +49,11 @@ def consecutive_increase(ctx, data):
 @click.pass_context
 @historical_collector
 def month_average_price(ctx, data):
-    click.echo(data)
-    for i in data:
-        click.echo(getattr(i, 'date'))
+    h = HistoricalFunctions(data, ctx.obj['ohlc'])
+    result = h.average_price()
+    click.echo('{: <10s} {}'.format('Date', 'Average price ($)'))
+    for month in result:
+        click.echo('{: <10s} {}'.format(month[0], month[1]))
 
 
 @cli.command('export')
