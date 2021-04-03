@@ -24,12 +24,25 @@ def cli(ctx, **kwargs):
 @click.pass_context
 @historical_collector
 def consecutive_increase(ctx, data):
-    click.echo(data)
-    for i in data:
-        click.echo(getattr(i, ctx.obj['ohlc']))
-    click.echo('consecutive-increase')
-    click.echo(ctx.obj['coin'])
-    click.echo(ctx.obj['ohlc'])
+    price_column = ctx.obj['ohlc']
+    h = HistoricalFunctions(data, price_column)
+    result = h.longest_growth_period()
+    if result is None:
+        click.echo(
+            'No consecutive period with an increasing price has been found.')
+    else:
+        periods = [(data[start], data[end]) for start, end in result]
+        if len(periods) == 1:
+            first_day, last_day, amount = h.period_details(periods[0])
+            click.echo(f'Longest consecutive period was from {first_day} to '
+                       f'{last_day} with increase of ${amount}')
+        else:
+            click.echo('More than one consecutive period of the '
+                       'same length has been found:')
+            for period in periods:
+                first_day, last_day, amount = h.period_details(period)
+                click.echo(f'Period from {first_day} to {last_day} '
+                           f'with increase of ${amount}')
 
 
 @cli.command('average-price-by-month')
