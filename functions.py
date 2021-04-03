@@ -1,5 +1,6 @@
 import csv
 from datetime import datetime, timedelta
+from decimal import Decimal
 from importlib import import_module
 import json
 import requests
@@ -270,8 +271,11 @@ class HistoricalFunctions:
     def longest_growth_period(self):
         """Find longest consecutive periods with increasing price."""
 
+        if len(self.__historical_data) < 2:
+            return None
         prices = list_values(self.__historical_data, self.__price_column)
         local_max, local_min = self.find_local_max_min(prices)
+
         # Discard first element if local maximum
         if len(local_max) > len(local_min):
             local_max.pop(0)
@@ -285,6 +289,8 @@ class HistoricalFunctions:
                 local_min.pop(-1)
 
         pairs = list(zip(local_min, local_max))
+        if not pairs:
+            return None
         m = max(pairs, key=self.difference)
         return (p for p in pairs if self.difference(p) == self.difference(m))
 
@@ -331,6 +337,12 @@ class HistoricalFunctions:
             date = to_string(data[0].date, '%Y-%m')
             result.append((date, round(average, precision)))
         return result
+
+    def period_details(self, period):
+        start, end = period
+        d = self.difference((getattr(start, self.__price_column),
+                             getattr(end, self.__price_column)))
+        return start.date, end.date, d.quantize(Decimal('0.01'))
 
     def group_by_months(self):
         """Group historical data by month."""
