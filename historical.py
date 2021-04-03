@@ -27,10 +27,7 @@ def consecutive_increase(ctx, data):
     price_column = ctx.obj['ohlc']
     h = HistoricalFunctions(data, price_column)
     result = h.longest_growth_period()
-    if result is None:
-        click.echo(
-            'No consecutive period with an increasing price has been found.')
-    else:
+    if result is not None:
         periods = [(data[start], data[end]) for start, end in result]
         if len(periods) == 1:
             first_day, last_day, amount = h.period_details(periods[0])
@@ -43,6 +40,9 @@ def consecutive_increase(ctx, data):
                 first_day, last_day, amount = h.period_details(period)
                 click.echo(f'Period from {first_day} to {last_day} '
                            f'with increase of ${amount}')
+    else:
+        click.echo(
+            'No consecutive period with an increasing price has been found.')
 
 
 @cli.command('average-price-by-month')
