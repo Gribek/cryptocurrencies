@@ -23,21 +23,19 @@ def cli(ctx, **kwargs):
 @cli.command('consecutive-increase')
 @click.pass_context
 @historical_collector
-def consecutive_increase(ctx, data):
-    price_column = ctx.obj['ohlc']
-    h = HistoricalFunctions(data, price_column)
-    result = h.longest_growth_period()
+def consecutive_increase(obj, ctx, data):
+    result = obj.longest_growth_period()
     if result is not None:
         periods = [(data[start], data[end]) for start, end in result]
         if len(periods) == 1:
-            first_day, last_day, amount = h.period_details(periods[0])
+            first_day, last_day, amount = obj.period_details(periods[0])
             click.echo(f'Longest consecutive period was from {first_day} to '
                        f'{last_day} with increase of ${amount}')
         else:
             click.echo('More than one consecutive period of the '
                        'same length has been found:')
             for period in periods:
-                first_day, last_day, amount = h.period_details(period)
+                first_day, last_day, amount = obj.period_details(period)
                 click.echo(f'Period from {first_day} to {last_day} '
                            f'with increase of ${amount}')
     else:
@@ -48,9 +46,8 @@ def consecutive_increase(ctx, data):
 @cli.command('average-price-by-month')
 @click.pass_context
 @historical_collector
-def month_average_price(ctx, data):
-    h = HistoricalFunctions(data, ctx.obj['ohlc'])
-    result = h.average_price()
+def month_average_price(obj, ctx, data):
+    result = obj.average_price()
     click.echo('{: <10s} {}'.format('Date', 'Average price ($)'))
     for month in result:
         click.echo('{: <10s} {}'.format(month[0], month[1]))
@@ -63,9 +60,8 @@ def month_average_price(ctx, data):
 @click.option('--file', default='data', callback=validate_filename,
               help='Choose name of the file, default is "historical_data"')
 @historical_collector
-def export(ctx, data, **kwargs):
-    h = HistoricalFunctions(data, ctx.obj['ohlc'])
-    filename = h.export_fo_file(kwargs['file'], kwargs['format'])
+def export(obj, ctx, data, **kwargs):
+    filename = obj.export_fo_file(kwargs['file'], kwargs['format'])
     if filename:
         click.echo(
             f' The data has been successfully written to the {filename} file')
