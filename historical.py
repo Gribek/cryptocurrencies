@@ -1,7 +1,8 @@
 import click
 
-from functions import historical_collector
-from validation import validate_start_date, validate_end_date, validate_filename
+from functions import historical_collector, HistoricalFunctions
+from validation import validate_start_date, validate_end_date, \
+    validate_filename
 
 
 @click.group()
@@ -48,11 +49,11 @@ def month_average_price(ctx, data):
               help='Choose name of the file, default is "historical_data"')
 @historical_collector
 def export(ctx, data, **kwargs):
-    click.echo(data)
-    click.echo(kwargs['format'])
-    click.echo(kwargs['file'])
-    for i in data:
-        click.echo(getattr(i, 'date'))
+    h = HistoricalFunctions(data, ctx.obj['ohlc'])
+    filename = h.export_fo_file(kwargs['file'], kwargs['format'])
+    if filename:
+        click.echo(
+            f' The data has been successfully written to the {filename} file')
 
 
 if __name__ == '__main__':
