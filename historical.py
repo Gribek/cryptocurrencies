@@ -1,7 +1,7 @@
 import click
 
 from functions import historical_collector
-from validation import validate_start_date, validate_end_date
+from validation import validate_start_date, validate_end_date, validate_filename
 
 
 @click.group()
@@ -44,7 +44,7 @@ def month_average_price(ctx, data):
 @click.pass_context
 @click.option('--format', default='csv', type=click.Choice(['csv', 'json']),
               help='Choose file format, default is "csv"')
-@click.option('--file', default='data',
+@click.option('--file', default='data', callback=validate_filename,
               help='Choose name of the file, default is "historical_data"')
 @historical_collector
 def export(ctx, data, **kwargs):

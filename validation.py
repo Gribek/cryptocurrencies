@@ -79,6 +79,11 @@ def validate_end_date(ctx, value):
     return end_date
 
 
+def validate_filename(ctx, value):
+    """Validate file argument. Return value without file format."""
+    return value.split('.')[0]
+
+
 def last_day(date):
     """Set the day to the last day of the month."""
     day = monthrange(date.year, date.month)[1]
