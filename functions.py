@@ -1,5 +1,7 @@
+import csv
 from datetime import datetime, timedelta
 from importlib import import_module
+import json
 import requests
 from statistics import mean
 from string import Template
@@ -344,6 +346,30 @@ class HistoricalFunctions:
         else:
             result.append(self.__historical_data[start_index:])
         return result
+
+    def export_fo_file(self, name, format_):
+        methods = {'csv': '_save_as_csv', 'json': '_save_as_json'}
+        func = getattr(self, methods.get(format_))
+        if func is None:
+            sys.exit(f'Unable to save to {format_} file. Unknown format.')
+        filename = name + '.' + format_
+        data = [i.to_file(self.__price_column) for i in self.__historical_data]
+        func(data, filename)
+        return filename
+
+    @staticmethod
+    def _save_as_json(data, filename):
+        with open(filename, 'w') as file:
+            json.dump(data, file, indent=4)
+
+    @staticmethod
+    def _save_as_csv(data, filename):
+        with open(filename, 'w') as file:
+            headers = ['date', 'price']
+            writer = csv.DictWriter(file, fieldnames=headers, delimiter=',')
+            writer.writerow({'date': 'Date', 'price': 'Price ($)'})
+            for dict_ in data:
+                writer.writerow(dict_)
 
 
 def list_values(container, attribute):
