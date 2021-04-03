@@ -412,6 +412,6 @@ def historical_collector(cli_function):
                  'end': to_string(ctx.obj['end_date']),
                  'coin': ctx.obj['coin'], 'error': error}))
 
-        cli_function(ctx, sorted(data, key=lambda x: x.date), **kwargs)
+        cli_function(ctx, data, **kwargs)
 
     return wrapper

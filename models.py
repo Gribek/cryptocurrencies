@@ -20,9 +20,10 @@ class BaseModel(Model):
         attr = getattr(cls, column)
         if condition:
             cond_attr = getattr(cls, condition['column'])
-            return cls.select().where((cond_attr == condition['value']) &
-                                      (attr.between(lower, upper)))
-        return cls.select().where(attr.between(lower, upper))
+            return cls.select().where(
+                (cond_attr == condition['value']) &
+                (attr.between(lower, upper))).order_by(attr)
+        return cls.select().where(attr.between(lower, upper)).order_by(attr)
 
 
 class Cryptocurrency(BaseModel):
