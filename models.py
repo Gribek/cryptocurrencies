@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from peewee import *
 
 from db_connection import sqlite_connection
@@ -38,7 +40,8 @@ class HistoricalValue(BaseModel):
     currency = ForeignKeyField(Cryptocurrency, backref='historical_values',
                                on_delete='CASCADE')
 
-    def to_json(self, price_column, precision=2):
+    def to_file(self, price_column, precision=2):
+        """Prepare a dictionary with object data."""
         price = getattr(self, price_column)
         return {'date': str(self.date),
                 'price': round(float(price), precision)}
