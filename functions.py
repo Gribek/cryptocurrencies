@@ -348,6 +348,7 @@ class HistoricalFunctions:
         return result
 
     def export_fo_file(self, name, format_):
+        """Export historical data to the file in the given format."""
         methods = {'csv': '_save_as_csv', 'json': '_save_as_json'}
         func = getattr(self, methods.get(format_))
         if func is None:
@@ -359,11 +360,13 @@ class HistoricalFunctions:
 
     @staticmethod
     def _save_as_json(data, filename):
+        """Save the data as json file."""
         with open(filename, 'w') as file:
             json.dump(data, file, indent=4)
 
     @staticmethod
     def _save_as_csv(data, filename):
+        """Save the data as csv file."""
         with open(filename, 'w') as file:
             headers = ['date', 'price']
             writer = csv.DictWriter(file, fieldnames=headers, delimiter=',')
