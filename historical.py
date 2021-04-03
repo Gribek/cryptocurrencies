@@ -1,6 +1,6 @@
 import click
 
-from functions import historical_collector, HistoricalFunctions
+from functions import historical_functions
 from validation import validate_start_date, validate_end_date, \
     validate_filename
 
@@ -22,7 +22,7 @@ def cli(ctx, **kwargs):
 
 @cli.command('consecutive-increase')
 @click.pass_context
-@historical_collector
+@historical_functions
 def consecutive_increase(obj, ctx, data):
     result = obj.longest_growth_period()
     if result is not None:
@@ -45,7 +45,7 @@ def consecutive_increase(obj, ctx, data):
 
 @cli.command('average-price-by-month')
 @click.pass_context
-@historical_collector
+@historical_functions
 def month_average_price(obj, ctx, data):
     result = obj.average_price()
     click.echo('{: <10s} {}'.format('Date', 'Average price ($)'))
@@ -59,7 +59,7 @@ def month_average_price(obj, ctx, data):
               help='Choose file format, default is "csv"')
 @click.option('--file', default='data', callback=validate_filename,
               help='Choose name of the file, default is "historical_data"')
-@historical_collector
+@historical_functions
 def export(obj, ctx, data, **kwargs):
     filename = obj.export_fo_file(kwargs['file'], kwargs['format'])
     if filename:

@@ -403,17 +403,18 @@ def to_string(value, format_='%Y-%m-%d'):
     return datetime.strftime(value, format_)
 
 
-def historical_collector(cli_function):
-    """Gather required data and pass them to a CLI function."""
+def historical_functions(cli_function):
+    """Decorator for cli historical functions."""
 
     error_message = Template(
-        "No data was found for the following query:\n Start date: $start\n "
-        "End date: $end\n Coin: $coin\n\n "
+        "No data has been found for the following query:\n "
+        "Start date: $start\n End date: $end\n Coin: $coin\n\n "
         "Make sure you have entered the correct cryptocurrency ID\n\n "
         "The following error has occurred:\n $error"
     )
 
     def wrapper(ctx, **kwargs):
+        """Gather required data and pass them to a CLI function."""
         db = sqlite_connection(settings.DB_PATH, settings.DB_FILENAME)
         c = HistoricalCollector(db, ctx.obj['coin'], ctx.obj['start_date'],
                                 ctx.obj['end_date'])
@@ -425,6 +426,8 @@ def historical_collector(cli_function):
                  'end': to_string(ctx.obj['end_date']),
                  'coin': ctx.obj['coin'], 'error': error}))
 
-        cli_function(ctx, data, **kwargs)
+        h = HistoricalFunctions(data, ctx.obj['ohlc'])
+
+        cli_function(h, ctx, data, **kwargs)
 
     return wrapper
