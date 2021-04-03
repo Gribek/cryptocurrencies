@@ -327,7 +327,13 @@ class HistoricalFunctions:
         """Calculate absolute difference between two elements."""
         return abs(pair[0] - pair[1])
 
-    def average_price(self, precision=2):
+    def period_details(self, period):
+        start, end = period
+        d = self.difference((getattr(start, self.__price_column),
+                             getattr(end, self.__price_column)))
+        return start.date, end.date, d.quantize(Decimal('0.01'))
+
+    def average_price(self):
         """Calculate the average price for each month."""
         grouped_by_months = self.group_by_months()
         result = []
@@ -335,14 +341,8 @@ class HistoricalFunctions:
             prices = list_values(data, self.__price_column)
             average = mean(prices)
             date = to_string(data[0].date, '%Y-%m')
-            result.append((date, round(average, precision)))
+            result.append((date, average.quantize(Decimal('0.01'))))
         return result
-
-    def period_details(self, period):
-        start, end = period
-        d = self.difference((getattr(start, self.__price_column),
-                             getattr(end, self.__price_column)))
-        return start.date, end.date, d.quantize(Decimal('0.01'))
 
     def group_by_months(self):
         """Group historical data by month."""
