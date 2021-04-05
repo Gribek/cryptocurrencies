@@ -13,6 +13,8 @@ DB_PATH = 'db'
 HISTORICAL_URL = Template(
     'https://api.coinpaprika.com/v1/coins/$coin/ohlcv/historical')
 
+CRYPTOCURRENCY_URL = Template('https://api.coinpaprika.com/v1/coins/$currency')
+
 # Maximum number of rows in one request (due to API limit)
 ROWS_LIMIT = 360
 
@@ -28,3 +30,11 @@ HISTORICAL_MODIFICATIONS = (
         'args': ('time_close', 'date', '%Y-%m-%dT%H:%M:%SZ', '%Y-%m-%d')
     },
 )
+
+CRYPTOCURRENCY_MODIFICATIONS = (
+    {
+        'function': 'currency_name',
+        'args': ('id', 'currency_name')
+    },
+)
+
