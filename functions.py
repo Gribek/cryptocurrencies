@@ -230,16 +230,7 @@ class HistoricalCollector:
         if len(db_data) == entries_required:
             return db_data, None
 
-        parameters = self.requests_parameters(entries_required, ROWS_LIMIT)
-        reject_values = [to_string(day) for day in
-                         list_values(db_data, self.__column)]
-        url = self.__api_url.safe_substitute(coin=self.__currency)
-
-        worker = ApiWorker(
-            self.__db, url, parameters, self.__modifications, self.__table,
-            {'currency': c}, self.__column, reject_values
-        )
-        new_data, error = worker.data_one_to_many()
+        new_data, error = self.get_missing_data(c, db_data, entries_required)
         if new_data is None:
             return None, error
 
@@ -266,6 +257,19 @@ class HistoricalCollector:
         if error is None:
             data = data[0]
         return data, error
+
+    def get_missing_data(self, c, db_data, entries_required):
+        """Download missing historical data from the api."""
+        parameters = self.requests_parameters(entries_required, ROWS_LIMIT)
+        reject_values = [to_string(day) for day in
+                         list_values(db_data, self.__column)]
+        url = self.__api_url.safe_substitute(coin=self.__currency)
+        worker = ApiWorker(
+            self.__db, url, parameters, self.__modifications, self.__table,
+            {'currency': c}, self.__column, reject_values
+        )
+        new_data, error = worker.data_one_to_many()
+        return new_data, error
 
     def get_historical_values(self, cryptocurrency):
         """Download historical values from the database."""
