@@ -31,6 +31,7 @@ HISTORICAL_MODIFICATIONS = (
     },
 )
 
+# Modifications for Cryptocurrency model
 CRYPTOCURRENCY_MODIFICATIONS = (
     {
         'function': 'currency_name',
