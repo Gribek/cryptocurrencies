@@ -367,10 +367,13 @@ class HistoricalFunctions:
         return abs(pair[0] - pair[1])
 
     def period_details(self, period):
+        """Get information about the selected period."""
         start, end = period
         d = self.difference((getattr(start, self.__price_column),
                              getattr(end, self.__price_column)))
-        return start.date, end.date, d.quantize(Decimal('0.0001'))
+        if d >= 0.01:
+            d = d.quantize(Decimal('0.01'))
+        return start.date, end.date, d
 
     def average_price(self):
         """Calculate the average price for each month."""
@@ -379,8 +382,10 @@ class HistoricalFunctions:
         for data in grouped_by_months:
             prices = list_values(data, self.__price_column)
             average = mean(prices)
+            if average >= 0.01:
+                average = average.quantize(Decimal('0.01'))
             date = to_string(data[0].date, '%Y-%m')
-            result.append((date, average.quantize(Decimal('0.01'))))
+            result.append((date, average))
         return result
 
     def group_by_months(self):
