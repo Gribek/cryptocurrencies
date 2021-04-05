@@ -10,7 +10,8 @@ import sys
 
 from models import Cryptocurrency, HistoricalValue
 from db_connection import sqlite_connection
-from settings import HISTORICAL_URL, HISTORICAL_MODIFICATIONS, ROWS_LIMIT
+from settings import HISTORICAL_URL, HISTORICAL_MODIFICATIONS, ROWS_LIMIT, \
+    CRYPTOCURRENCY_URL, CRYPTOCURRENCY_MODIFICATIONS
 import settings
 
 
@@ -54,7 +55,10 @@ class ApiDataDownloader(ApiDataContainer):
                 data = self.send_request(s, parameter_dict)
                 if data is None:
                     break
-                api_data += data
+                if isinstance(data, list):
+                    api_data += data
+                else:
+                    api_data.append(data)
             else:
                 self._data = api_data
 
@@ -116,6 +120,10 @@ class ApiDataModifier(ApiDataContainer):
             return None
         return to_string(d, out_format)
 
+    @_Decorators.add_new_key
+    def currency_name(self, dict_obj, key):
+        return dict_obj[key]
+
 
 class ApiDataSave(ApiDataContainer):
     """Save API data to the database."""
@@ -139,7 +147,8 @@ class ApiDataSave(ApiDataContainer):
     def __save_object(self, data_dict, columns):
         """Create and save a new object to the database."""
         dataset = {column: data_dict[column] for column in columns}
-        dataset.update(self.__foreign_keys)
+        if self.__foreign_keys:
+            dataset.update(self.__foreign_keys)
         cls = getattr(import_module(self.__models_file), self.__table)
         with self.__db:
             return cls.create(**dataset)
@@ -210,8 +219,11 @@ class HistoricalCollector:
 
     def get_data(self):
         """Gather the requested data from the db or the API."""
+        c, error = self.get_cryptocurrency()
+        if c is None:
+            return None, error
+
         with self.__db:
-            c = Cryptocurrency.get_or_create(currency_name=self.__currency)[0]
             db_data = self.get_historical_values(c)
 
         entries_required = self.count_days()
@@ -235,6 +247,25 @@ class HistoricalCollector:
             complete_data = self.get_historical_values(c)
 
         return complete_data, error
+
+    def get_cryptocurrency(self):
+        """Get cryptocurrency from the database or the API."""
+        error = None
+        with self.__db:
+            c = Cryptocurrency.get_or_none(currency_name=self.__currency)
+        if c is not None:
+            return c, error
+
+        url = CRYPTOCURRENCY_URL.safe_substitute(currency=self.__currency)
+        parameters = (None,)
+        worker = ApiWorker(
+            self.__db, url, parameters,
+            CRYPTOCURRENCY_MODIFICATIONS, 'Cryptocurrency', foreign_keys=None
+        )
+        data, error = worker.data_one_to_many()
+        if error is None:
+            data = data[0]
+        return data, error
 
     def get_historical_values(self, cryptocurrency):
         """Download historical values from the database."""
@@ -339,7 +370,7 @@ class HistoricalFunctions:
         start, end = period
         d = self.difference((getattr(start, self.__price_column),
                              getattr(end, self.__price_column)))
-        return start.date, end.date, d.quantize(Decimal('0.01'))
+        return start.date, end.date, d.quantize(Decimal('0.0001'))
 
     def average_price(self):
         """Calculate the average price for each month."""
