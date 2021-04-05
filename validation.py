@@ -5,7 +5,7 @@ import click
 from functions import to_datetime
 
 
-def validate_start_date(ctx, value):
+def validate_start_date(ctx, param, value):
     """Validate start_date argument."""
 
     # Check that the date format is correct
@@ -36,7 +36,7 @@ def validate_start_date(ctx, value):
     return start_date
 
 
-def validate_end_date(ctx, value):
+def validate_end_date(ctx, param, value):
     """Validate end_date argument."""
 
     # Check that the date format is correct
@@ -79,7 +79,7 @@ def validate_end_date(ctx, value):
     return end_date
 
 
-def validate_filename(ctx, value):
+def validate_filename(ctx, param, value):
     """Validate file argument. Return value without file format."""
     return value.split('.')[0]
 
