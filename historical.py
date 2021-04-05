@@ -64,7 +64,7 @@ def export(obj, ctx, data, **kwargs):
     filename = obj.export_fo_file(kwargs['file'], kwargs['format'])
     if filename:
         click.echo(
-            f' The data has been successfully written to the {filename} file')
+            f'The data has been successfully written to the {filename} file')
 
 
 if __name__ == '__main__':
