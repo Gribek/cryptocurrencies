@@ -256,6 +256,10 @@ class HistoricalCollector:
         data, error = worker.data_one_to_many()
         if error is None:
             data = data[0]
+        else:
+            if '404 Client Error' in error:
+                error += ("\n\nMake sure you have entered the correct"
+                          " cryptocurrency ID")
         return data, error
 
     def get_missing_data(self, c, db_data, entries_required):
@@ -454,11 +458,13 @@ def to_string(value, format_='%Y-%m-%d'):
 def historical_functions(cli_function):
     """Decorator for cli historical functions."""
 
-    error_message = Template(
+    no_data_message = Template(
         "No data has been found for the following query:\n "
-        "Start date: $start\n End date: $end\n Coin: $coin\n\n "
-        "Make sure you have entered the correct cryptocurrency ID\n\n "
-        "The following error has occurred:\n $error"
+        "Start date: $start\n End date: $end\n Coin: $coin"
+    )
+    error_message = Template(
+        "\nThe command could not be executed.\n\nThe following error "
+        "occurred while downloading data from API:\n $error\n"
     )
 
     def wrapper(ctx, **kwargs):
@@ -469,10 +475,13 @@ def historical_functions(cli_function):
         data, error = c.get_data()
 
         if error is not None:
-            sys.exit(error_message.safe_substitute(
+            sys.exit(error_message.safe_substitute({'error': error}))
+
+        if len(data) == 0:
+            sys.exit(no_data_message.safe_substitute(
                 {'start': to_string(ctx.obj['start_date']),
                  'end': to_string(ctx.obj['end_date']),
-                 'coin': ctx.obj['coin'], 'error': error}))
+                 'coin': ctx.obj['coin']}))
 
         h = HistoricalFunctions(data, ctx.obj['ohlc'])
 
