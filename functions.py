@@ -10,8 +10,6 @@ import sys
 
 from models import Cryptocurrency, HistoricalValue
 from db_connection import sqlite_connection
-from settings import HISTORICAL_URL, HISTORICAL_MODIFICATIONS, ROWS_LIMIT, \
-    CRYPTOCURRENCY_URL, CRYPTOCURRENCY_MODIFICATIONS
 import settings
 
 
@@ -208,8 +206,8 @@ class HistoricalCollector:
 
     __table = 'HistoricalValue'
     __column = 'date'
-    __api_url = HISTORICAL_URL
-    __modifications = HISTORICAL_MODIFICATIONS
+    __api_url = settings.HISTORICAL_URL
+    __modifications = settings.HISTORICAL_MODIFICATIONS
 
     def __init__(self, db, currency, start_date, end_date):
         self.__db = db
@@ -247,12 +245,12 @@ class HistoricalCollector:
         if c is not None:
             return c, error
 
-        url = CRYPTOCURRENCY_URL.safe_substitute(currency=self.__currency)
+        url = settings.CRYPTOCURRENCY_URL.safe_substitute(
+            currency=self.__currency)
         parameters = (None,)
-        worker = ApiWorker(
-            self.__db, url, parameters,
-            CRYPTOCURRENCY_MODIFICATIONS, 'Cryptocurrency', foreign_keys=None
-        )
+        modifications = settings.CRYPTOCURRENCY_MODIFICATIONS
+        worker = ApiWorker(self.__db, url, parameters, modifications,
+                           'Cryptocurrency', foreign_keys=None)
         data, error = worker.data_one_to_many()
         if error is None:
             data = data[0]
@@ -264,7 +262,8 @@ class HistoricalCollector:
 
     def get_missing_data(self, c, db_data, entries_required):
         """Download missing historical data from the api."""
-        parameters = self.requests_parameters(entries_required, ROWS_LIMIT)
+        parameters = self.requests_parameters(entries_required,
+                                              settings.ROWS_LIMIT)
         reject_values = [to_string(day) for day in
                          list_values(db_data, self.__column)]
         url = self.__api_url.safe_substitute(coin=self.__currency)
