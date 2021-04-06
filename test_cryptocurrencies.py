@@ -8,7 +8,7 @@ import pytest
 
 from historical import cli
 from models import Cryptocurrency, HistoricalValue
-from functions import ApiDataDownloader
+from functions import ApiDataDownloader, ApiDataModifier
 import settings
 
 MODELS = [Cryptocurrency, HistoricalValue]
@@ -208,3 +208,56 @@ class TestApiDataDownloader:
             assert downloader_third.data is not None, self.no_data_error
             assert len(downloader_third.data) == 1, self.amount_error
             assert downloader_third.data[0]['id'] == 'btc-bitcoin', coin_error
+
+
+@pytest.fixture
+def modifier():
+    data = [
+        {"time_open": "2019-01-01T00:00:00Z",
+         "time_close": "2019-01-01T23:59:59Z", "open": 3743.13383814,
+         "high": 3848.768792, "low": 3695.32467935, "close": 3846.6792974,
+         "volume": 3062073034, "market_cap": 65338972677},
+        {"time_open": "2019-01-02T00:00:00Z",
+         "time_close": "2019-01-02T23:59:59Z", "open": 3852.19783968,
+         "high": 3951.20469616, "low": 3811.88806393, "close": 3941.99122065,
+         "volume": 3627095860, "market_cap": 67250129005},
+        {"time_open": "2019-01-03T00:00:00Z",
+         "time_close": "2019-01-03T23:59:59Z", "open": 3942.27312969,
+         "high": 3942.57529017, "low": 3828.26988091, "close": 3838.44932784,
+         "volume": 3126326309, "market_cap": 68829869344}]
+    modifications = settings.HISTORICAL_MODIFICATIONS
+    modifier = ApiDataModifier(data, modifications)
+    return modifier
+
+
+@pytest.fixture
+def modifier_currency():
+    data = [{"id": "btc-bitcoin", "name": "Bitcoin", "symbol": "BTC",
+             "rank": 1, "is_new": False, "is_active": True, "type": "coin"}]
+    modifications = settings.CRYPTOCURRENCY_MODIFICATIONS
+    modifier = ApiDataModifier(data, modifications)
+    return modifier
+
+
+class TestApiDataModifier:
+    """Test ApiDataModifier methods."""
+
+    ker_error = 'Key is missing in data dictionary'
+    value_error = 'Incorrect value after modifications'
+
+    def test_make_modifications_historical_data(self, modifier):
+        """Test making modifications on historical data."""
+        modifier.make_modifications()
+        key = 'date'
+        for data_dict in modifier.data:
+            assert key in data_dict, self.ker_error
+        for i, date in enumerate(('2019-01-01', '2019-01-02', '2019-01-03')):
+            assert modifier.data[i][key] == date, self.value_error
+
+    def test_make_modifications_cryptocurrency(self, modifier_currency):
+        """Test making modifications on cryptocurrency data."""
+        modifier_currency.make_modifications()
+        currency_data = modifier_currency.data[0]
+        key = 'currency_name'
+        assert key in currency_data, self.ker_error
+        assert currency_data[key] == 'btc-bitcoin', self.value_error
