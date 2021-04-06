@@ -72,12 +72,12 @@ is equivalent of:
 
 **1. _consecutive-increasee_ - display the longest consecutive period in which the currency price was rising**
   
- Command pattern: historical.py [OPTIONS] consecutive-increasee 
+ Command pattern: historical.py [OPTIONS] consecutive-increase 
   
  Example inputs:
  ```
- python historical.py --start-date=2020-01-01 --end-date=2020-03-31 consecutive-increasee
- python historical.py --start-date=2020-01-01 --end-date=2020-03-31 --coin=usdt-tether consecutive-increasee
+ python historical.py --start-date=2020-01-01 --end-date=2020-03-31 consecutive-increase
+ python historical.py --start-date=2020-01-01 --end-date=2020-03-31 --coin=usdt-tether consecutive-increase
  ```
 
 **2. _average-price-by-month_ - display the monthly average price of the currency over the given period**
