@@ -45,7 +45,9 @@ It is NOT recommended to make changes to them as it may cause program malfunctio
 
 All commands are called from the historical.py script.  
 
-General usage:  historical.py [OPTIONS] COMMAND [ARGS], where:  
+General usage:  historical.py [OPTIONS] COMMAND [ARGS]
+
+where:  
 OPTIONS are arguments used by every command described below  
 COMMAND is the name of the command  
 ARGS - are command-specific arguments (described under each command if any).
