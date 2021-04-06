@@ -229,7 +229,6 @@ class HistoricalCollector:
 
         with self.__db:
             db_data = self._get_historical_values(c)
-
         entries_required = self._count_days()
         if len(db_data) == entries_required:
             return db_data, None
@@ -240,7 +239,6 @@ class HistoricalCollector:
 
         with self.__db:
             complete_data = self._get_historical_values(c)
-
         return complete_data, error
 
     def _get_cryptocurrency(self):
