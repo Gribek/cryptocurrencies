@@ -11,12 +11,10 @@ def validate_start_date(ctx, param, value):
     # Check that the date format is correct
     format_match = False
     for format_ in ('%Y-%m-%d', '%Y-%m'):
-        try:
-            start_date = to_datetime(value, format_)
-        except ValueError:
-            pass
-        else:
+        start_date = try_format(value, format_)
+        if start_date is not None:
             format_match = True
+            break
 
     # Raise error if no format matches
     if not format_match:
@@ -29,7 +27,8 @@ def validate_start_date(ctx, param, value):
     # Check that the start date is before the end date
     try:
         if start_date > ctx.obj['end']:
-            raise click.BadParameter('Start date has to be before end date!')
+            raise click.BadParameter(
+                'The start date must be earlier than the end date!')
     except KeyError:  # In case the user enters start_date first
         pass
 
@@ -42,20 +41,14 @@ def validate_end_date(ctx, param, value):
     # Check that the date format is correct
     format_match = False
     modify_date = False
-    try:
-        end_date = to_datetime(value, '%Y-%m-%d')
-    except ValueError:
-        pass
-    else:
+    end_date = try_format(value, '%Y-%m-%d')
+    if end_date is not None:
         format_match = True
-
-    try:
-        end_date = to_datetime(value, '%Y-%m')
-    except ValueError:
-        pass
     else:
-        format_match = True
-        modify_date = True
+        end_date = try_format(value, '%Y-%m')
+        if end_date is not None:
+            format_match = True
+            modify_date = True
 
     # Raise error if no format matches
     if not format_match:
@@ -72,7 +65,8 @@ def validate_end_date(ctx, param, value):
     # Check that the start date is before the end date
     try:
         if end_date < ctx.obj['start']:
-            raise click.BadParameter('End date has to be after start date!')
+            raise click.BadParameter(
+                'The end date must be later than the start date!')
     except KeyError:  # In case the user enters end_date first
         pass
 
@@ -82,6 +76,14 @@ def validate_end_date(ctx, param, value):
 def validate_filename(ctx, param, value):
     """Validate file argument. Return value without file format."""
     return value.split('.')[0]
+
+
+def try_format(value, format_):
+    """Try to change type to datetime with the given format."""
+    try:
+        return to_datetime(value, format_)
+    except ValueError:
+        return None
 
 
 def last_day(date):
