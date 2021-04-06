@@ -9,10 +9,11 @@ DB_PATH = 'db'
 
 
 # API
-# url for historical OHLC
+# Endpoint for historical OHLC
 HISTORICAL_URL = Template(
     'https://api.coinpaprika.com/v1/coins/$coin/ohlcv/historical')
 
+# Endpoint for cryptocurrency
 CRYPTOCURRENCY_URL = Template('https://api.coinpaprika.com/v1/coins/$currency')
 
 # Maximum number of rows in one request (due to API limit)
