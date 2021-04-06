@@ -178,8 +178,13 @@ class ApiWorker:
         self.__selection = selection
         self.__reject_values = reject_values
 
-    def data_one_to_many(self):
-        """Prepare and save data with one to many relationship."""
+    def data_one_to_many_or_no_relationship(self):
+        """Prepare and save data.
+
+        Data can be saved to the database with one to many
+        relationship or with no relationship at all. In the latter
+        case, foreign_keys object attribute has to be set to None.
+        """
         downloader = ApiDataDownloader(self.__url, self.__parameters)
         downloader.get_data()
         if downloader.data is None:
@@ -252,7 +257,7 @@ class HistoricalCollector:
         modifications = settings.CRYPTOCURRENCY_MODIFICATIONS
         worker = ApiWorker(self.__db, url, parameters, modifications,
                            'Cryptocurrency', foreign_keys=None)
-        data, error = worker.data_one_to_many()
+        data, error = worker.data_one_to_many_or_no_relationship()
         if error is None:
             data = data[0]
         else:
@@ -272,7 +277,7 @@ class HistoricalCollector:
             self.__db, url, parameters, self.__modifications, self.__table,
             {'currency': c}, self.__column, reject_values
         )
-        new_data, error = worker.data_one_to_many()
+        new_data, error = worker.data_one_to_many_or_no_relationship()
         return new_data, error
 
     def _get_historical_values(self, cryptocurrency):
