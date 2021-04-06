@@ -50,7 +50,7 @@ class ApiDataDownloader(ApiDataContainer):
         api_data = []
         with requests.Session() as s:
             for parameter_dict in self.__parameters:
-                data = self.send_request(s, parameter_dict)
+                data = self._send_request(s, parameter_dict)
                 if data is None:
                     break
                 if isinstance(data, list):
@@ -60,7 +60,7 @@ class ApiDataDownloader(ApiDataContainer):
             else:
                 self._data = api_data
 
-    def send_request(self, session, params):
+    def _send_request(self, session, params):
         """Send a request using the given session and parameters."""
         try:
             response = session.get(self.__api_url, params=params,
@@ -109,7 +109,7 @@ class ApiDataModifier(ApiDataContainer):
                 method(data_dict, *modification['args'])
 
     @_Decorators.add_new_key
-    def format_date(self, dict_obj, key, in_format, out_format):
+    def _format_date(self, dict_obj, key, in_format, out_format):
         """Return the date in the specified format."""
         date_string = dict_obj.get(key)
         try:
@@ -119,7 +119,7 @@ class ApiDataModifier(ApiDataContainer):
         return to_string(d, out_format)
 
     @_Decorators.add_new_key
-    def currency_name(self, dict_obj, key):
+    def _currency_name(self, dict_obj, key):
         return dict_obj[key]
 
 
@@ -136,13 +136,13 @@ class ApiDataSave(ApiDataContainer):
     def save_data(self):
         """Save all data to the database."""
         saved_objects = []
-        columns = self.__get_columns()
+        columns = self._get_columns()
         for data_dict in self._data:
-            obj = self.__save_object(data_dict, columns)
+            obj = self._save_object(data_dict, columns)
             saved_objects.append(obj)
         return saved_objects
 
-    def __save_object(self, data_dict, columns):
+    def _save_object(self, data_dict, columns):
         """Create and save a new object to the database."""
         dataset = {column: data_dict[column] for column in columns}
         if self.__foreign_keys:
@@ -151,7 +151,7 @@ class ApiDataSave(ApiDataContainer):
         with self.__db:
             return cls.create(**dataset)
 
-    def __get_columns(self):
+    def _get_columns(self):
         """Get a list of columns for the selected table.
 
         Exclude id and any foreign key fields.
@@ -188,14 +188,14 @@ class ApiWorker:
         modifier = ApiDataModifier(downloader.data, self.__modifications)
         modifier.make_modifications()
         if self.__selection:
-            data = self.__select_data(data=downloader.data)
+            data = self._select_data(data=downloader.data)
             downloader.data = data
 
         save_obj = ApiDataSave(downloader.data, self.__db, self.__table,
                                self.__foreign_keys)
         return save_obj.save_data(), None
 
-    def __select_data(self, data):
+    def _select_data(self, data):
         """Select data to be saved in the database."""
         return [data_dict for data_dict in data if
                 data_dict[self.__selection] not in self.__reject_values]
