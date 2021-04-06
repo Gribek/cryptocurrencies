@@ -8,6 +8,8 @@ import pytest
 
 from historical import cli
 from models import Cryptocurrency, HistoricalValue
+from functions import ApiDataDownloader
+import settings
 
 MODELS = [Cryptocurrency, HistoricalValue]
 TEST_DATA_FILE = 't_data.json'
@@ -149,3 +151,60 @@ class TestHistoricalCommands:
         assert result.exit_code == 0, self.code_error
         assert os.path.isfile('test_name.csv'), 'Incorrect filename'
         assert not os.path.isfile('test_name.json'), 'Incorrect file format'
+
+
+@pytest.fixture
+def downloader():
+    parameters = ({'start': '2020-01-01', 'end': '2020-01-31'},)
+    url = settings.HISTORICAL_URL.safe_substitute(coin='btc-bitcoin')
+    downloader = ApiDataDownloader(url, parameters, 10)
+    return downloader
+
+
+@pytest.fixture
+def downloader_second():
+    parameters = ({'start': '2020-01-01', 'end': '2020-01-31'},
+                  {'start': '2020-02-01', 'end': '2020-02-28'},
+                  {'start': '2020-03-01', 'end': '2020-03-31'})
+    url = settings.HISTORICAL_URL.safe_substitute(coin='btc-bitcoin')
+    downloader = ApiDataDownloader(url, parameters, 10)
+    return downloader
+
+
+@pytest.fixture
+def downloader_third():
+    parameters = (None,)
+    url = settings.CRYPTOCURRENCY_URL.safe_substitute(currency='btc-bitcoin')
+    downloader = ApiDataDownloader(url, parameters, 10)
+    return downloader
+
+
+class TestApiDataDownloader:
+    """Test ApiDataDownloader methods."""
+
+    no_data_error = 'Data has not been downloaded'
+    amount_error = 'Incorrect amount of downloaded data'
+
+    def test_get_data_single_request(self, downloader):
+        """Test downloading historical data with single request."""
+        downloader.get_data()
+        if downloader.error is None:
+            assert downloader.data is not None, self.no_data_error
+            assert len(downloader.data) == 31, self.amount_error
+
+    def test_get_data_multiple_requests(self, downloader_second):
+        """Test downloading historical data with multiple requests."""
+        downloader_second.get_data()
+        if downloader_second.error is None:
+            assert downloader_second.data is not None, self.no_data_error
+            assert len(downloader_second.data) == 90, self.amount_error
+
+    def test_get_data_cryptocurrency(self, downloader_third):
+        """Test downloading cryptocurrency data."""
+        coin_error = 'Data collected for the wrong currency'
+
+        downloader_third.get_data()
+        if downloader_third.error is None:
+            assert downloader_third.data is not None, self.no_data_error
+            assert len(downloader_third.data) == 1, self.amount_error
+            assert downloader_third.data[0]['id'] == 'btc-bitcoin', coin_error
