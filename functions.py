@@ -119,7 +119,8 @@ class ApiDataModifier(ApiDataContainer):
         return to_string(d, out_format)
 
     @_Decorators.add_new_key
-    def _currency_name(self, dict_obj, key):
+    def _rename(self, dict_obj, key):
+        """Assign the value of the existing key to the new one."""
         return dict_obj[key]
 
 
