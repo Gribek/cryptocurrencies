@@ -27,7 +27,7 @@ ROWS_LIMIT = 360
 # Modifications for HistoricalValue model
 HISTORICAL_MODIFICATIONS = (
     {
-        'function': 'format_date',
+        'function': '_format_date',
         'args': ('time_close', 'date', '%Y-%m-%dT%H:%M:%SZ', '%Y-%m-%d')
     },
 )
@@ -35,7 +35,7 @@ HISTORICAL_MODIFICATIONS = (
 # Modifications for Cryptocurrency model
 CRYPTOCURRENCY_MODIFICATIONS = (
     {
-        'function': 'currency_name',
+        'function': '_currency_name',
         'args': ('id', 'currency_name')
     },
 )
