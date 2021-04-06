@@ -1,5 +1,3 @@
-from decimal import Decimal
-
 from peewee import *
 
 from db_connection import sqlite_connection
