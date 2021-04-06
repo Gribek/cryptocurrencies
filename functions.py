@@ -217,27 +217,27 @@ class HistoricalCollector:
 
     def get_data(self):
         """Gather the requested data from the db or the API."""
-        c, error = self.get_cryptocurrency()
+        c, error = self._get_cryptocurrency()
         if c is None:
             return None, error
 
         with self.__db:
-            db_data = self.get_historical_values(c)
+            db_data = self._get_historical_values(c)
 
-        entries_required = self.count_days()
+        entries_required = self._count_days()
         if len(db_data) == entries_required:
             return db_data, None
 
-        new_data, error = self.get_missing_data(c, db_data, entries_required)
+        new_data, error = self._get_missing_data(c, db_data, entries_required)
         if new_data is None:
             return None, error
 
         with self.__db:
-            complete_data = self.get_historical_values(c)
+            complete_data = self._get_historical_values(c)
 
         return complete_data, error
 
-    def get_cryptocurrency(self):
+    def _get_cryptocurrency(self):
         """Get cryptocurrency from the database or the API."""
         error = None
         with self.__db:
@@ -260,10 +260,10 @@ class HistoricalCollector:
                           " cryptocurrency ID")
         return data, error
 
-    def get_missing_data(self, c, db_data, entries_required):
+    def _get_missing_data(self, c, db_data, entries_required):
         """Download missing historical data from the api."""
-        parameters = self.requests_parameters(entries_required,
-                                              settings.ROWS_LIMIT)
+        parameters = self._requests_parameters(entries_required,
+                                               settings.ROWS_LIMIT)
         reject_values = [to_string(day) for day in
                          list_values(db_data, self.__column)]
         url = self.__api_url.safe_substitute(coin=self.__currency)
@@ -274,19 +274,19 @@ class HistoricalCollector:
         new_data, error = worker.data_one_to_many()
         return new_data, error
 
-    def get_historical_values(self, cryptocurrency):
+    def _get_historical_values(self, cryptocurrency):
         """Download historical values from the database."""
         db_data = HistoricalValue.get_data_in_range(
             self.__column, self.__start_date, self.__end_date,
             condition={'column': 'currency', 'value': cryptocurrency})
         return db_data
 
-    def count_days(self):
+    def _count_days(self):
         """Count days between start and end dates inclusively."""
         delta = self.__end_date - self.__start_date
         return delta.days + 1
 
-    def date_range(self, days):
+    def _date_range(self, days):
         """Get a list of dates for which data are needed."""
         dates = []
         start = self.__start_date
@@ -295,13 +295,13 @@ class HistoricalCollector:
             dates.append(to_string(day))
         return dates
 
-    def requests_parameters(self, entries_required, limit):
+    def _requests_parameters(self, entries_required, limit):
         """Prepare query parameters for requests sent to the API."""
         if entries_required < limit:
             return {'start': to_string(self.__start_date),
                     'end': to_string(self.__end_date)},
 
-        date_range = self.date_range(entries_required)
+        date_range = self._date_range(entries_required)
         split_dates = [date_range[i * limit:(i + 1) * limit] for i in
                        range((len(date_range) + limit - 1) // limit)]
         return ({'start': i[0], 'end': i[-1]} for i in split_dates)
@@ -320,7 +320,7 @@ class HistoricalFunctions:
         if len(self.__historical_data) < 2:
             return None
         prices = list_values(self.__historical_data, self.__price_column)
-        local_max, local_min = self.find_local_max_min(prices)
+        local_max, local_min = self._find_local_max_min(prices)
 
         # Discard first element if local maximum
         if len(local_max) > len(local_min):
@@ -337,11 +337,11 @@ class HistoricalFunctions:
         pairs = list(zip(local_min, local_max))
         if not pairs:
             return None
-        m = max(pairs, key=self.difference)
-        return (p for p in pairs if self.difference(p) == self.difference(m))
+        m = max(pairs, key=self._difference)
+        return (p for p in pairs if self._difference(p) == self._difference(m))
 
     @staticmethod
-    def find_local_max_min(data):
+    def _find_local_max_min(data):
         """Find local maximum and local minimum values."""
         local_max = []
         local_min = []
@@ -369,22 +369,22 @@ class HistoricalFunctions:
         return local_max, local_min
 
     @staticmethod
-    def difference(pair):
+    def _difference(pair):
         """Calculate absolute difference between two elements."""
         return abs(pair[0] - pair[1])
 
     def period_details(self, period):
         """Get information about the selected period."""
         start, end = period
-        d = self.difference((getattr(start, self.__price_column),
-                             getattr(end, self.__price_column)))
+        d = self._difference((getattr(start, self.__price_column),
+                              getattr(end, self.__price_column)))
         if d >= 0.01:
             d = d.quantize(Decimal('0.01'))
         return start.date, end.date, d
 
     def average_price(self):
         """Calculate the average price for each month."""
-        grouped_by_months = self.group_by_months()
+        grouped_by_months = self._group_by_months()
         result = []
         for data in grouped_by_months:
             prices = list_values(data, self.__price_column)
@@ -395,7 +395,7 @@ class HistoricalFunctions:
             result.append((date, average))
         return result
 
-    def group_by_months(self):
+    def _group_by_months(self):
         """Group historical data by month."""
         result = []
         month = self.__historical_data[0].date.month
