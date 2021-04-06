@@ -13,7 +13,7 @@ $ pip install -r requirements.txt
 From this point, you can proceed to use the commands described [below](#available-commands).
 The attached database file (db/crypto.db) already has tables created but does not contain any data.
 
-However, If you'd like to create your own database file, just delete the crypto.db file or rename the database file in the settings (check [Settings](#Database filename)).
+However, If you'd like to create your own database file, just delete the crypto.db file or rename the database file in the settings (check [Settings](#Database-filename)).
 Then run the following script:
 ```
 python models.py
