@@ -1,0 +1,9 @@
+version: "3.8"
+services:
+  app:
+    build: .
+    image: crypto
+    volumes:
+      - ./db:/home/app_user/db
+    stdin_open: true
+    tty: true
