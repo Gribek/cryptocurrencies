@@ -1,14 +1,16 @@
 from string import Template
 
+
 # DATABASE
-# Database filename
-DB_FILENAME = 'crypto.db'
-
-# Relative path to the database file directory
-DB_PATH = 'db'
-
 # Connection to the database
-DB_CONNECTION = 'sqlite_connection'
+DATABASE = {
+    'connection': 'sqlite_connection',
+    'parameters': {
+        'path': 'db',
+        'filename': 'crypto.db',
+    }
+}
+
 
 # API
 # Endpoint for historical OHLC
