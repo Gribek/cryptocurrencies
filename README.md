@@ -31,9 +31,15 @@ The settings.py file contain the configuration for the following:
 * configuration of data modifications to be performed on downloaded data (to make them compatible with the database model)
 
 ##### Database filename
-To rename the database file, change the value of the DB_FILENAME variable, by default set to 'crypto.db':
+To rename the database file, change the value of the 'filename' key in DATABASE dictionary, by default set to 'crypto.db':
 ```
-DATABASE = 'crypto.db'
+DATABASE = {
+    'connection': 'sqlite_connection',
+    'parameters': {
+        'path': 'db',
+        'filename': 'crypto.db',
+    }
+}
 ```
 Remember to run models.py script to create a new database file and migrate models.
 
