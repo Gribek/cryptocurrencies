@@ -341,8 +341,8 @@ class HistoricalFunctions:
         pairs = list(zip(local_min, local_max))
         if not pairs:
             return None
-        m = max(pairs, key=self._difference)
-        return (p for p in pairs if self._difference(p) == self._difference(m))
+        max_difference = max(self._difference(pair) for pair in pairs)
+        return (p for p in pairs if self._difference(p) == max_difference)
 
     @staticmethod
     def _find_local_max_min(data):
