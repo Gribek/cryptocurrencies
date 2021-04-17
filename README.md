@@ -6,6 +6,28 @@
 * [Technologies](#technologies)
 
 ### Setup
+##### Using Docker Compose
+Download the repository and then run the following command:
+```
+docker-compose run --rm app
+```
+It will automatically attach you to the container and provide the pseudo terminal, where you can try the commands described [below](#available-commands).
+
+The attached database file (db/crypto.db) already has tables created but does not contain any data.
+If you want to start with a new database file, delete the crypto.db file or rename the database file in the settings (check [Settings](#Database-filename)).
+Remember that if you make changes to the settings.py file, you need to rebuild the docker image before running ```docker-compose run``` again:
+```
+docker-compose build
+```
+
+Then, after running the container, use the following command to create a new database file and migrate models:
+```
+python models.py
+```
+
+This concludes the project setup. [Here](#available-commands) you can find information how to use available commands.
+
+##### Using virtual environment
 Download the repository and prepare a new virtual environment. Then install all dependencies using the command:
 ```
 $ pip install -r requirements.txt
