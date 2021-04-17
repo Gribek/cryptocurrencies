@@ -7,6 +7,8 @@ DB_FILENAME = 'crypto.db'
 # Relative path to the database file directory
 DB_PATH = 'db'
 
+# Connection to the database
+DB_CONNECTION = 'sqlite_connection'
 
 # API
 # Endpoint for historical OHLC
