@@ -1,9 +1,8 @@
 from peewee import *
 
-from db_connection import sqlite_connection
-from settings import DB_FILENAME, DB_PATH
+from db_connection import DatabaseConnection
 
-db = sqlite_connection(DB_PATH, DB_FILENAME)
+db = DatabaseConnection.connect()
 
 
 class BaseModel(Model):
