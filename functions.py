@@ -9,7 +9,7 @@ from string import Template
 import sys
 
 from models import Cryptocurrency, HistoricalValue
-from db_connection import sqlite_connection
+import db_connection
 import settings
 
 
@@ -472,7 +472,8 @@ def historical_functions(cli_function):
 
     def wrapper(ctx, **kwargs):
         """Gather required data and pass them to a CLI function."""
-        db = sqlite_connection(settings.DB_PATH, settings.DB_FILENAME)
+        connection = getattr(db_connection, settings.DB_CONNECTION)
+        db = connection(settings.DB_PATH, settings.DB_FILENAME)
         c = HistoricalCollector(db, ctx.obj['coin'], ctx.obj['start_date'],
                                 ctx.obj['end_date'])
         data, error = c.get_data()
